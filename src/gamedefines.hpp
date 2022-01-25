@@ -244,6 +244,7 @@ enum e_PlayerRole {
 };
 
 std::string GetRoleName(e_PlayerRole playerRole);
+std::string GetRoleNameShort(e_PlayerRole playerRole);
 e_PlayerRole GetRoleFromString(const std::string &roleString);
 
 struct FormationEntry {
