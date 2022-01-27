@@ -34,7 +34,7 @@ Referee::Referee(Match *match) : match(match) {
 
     // whistle
 
-    boost::intrusive_ptr<Resource<SoundBuffer> > soundBufferRes = ResourceManagerPool::GetInstance().GetManager<SoundBuffer>(
+    boost::intrusive_ptr <Resource<SoundBuffer>> soundBufferRes = ResourceManagerPool::GetInstance().GetManager<SoundBuffer>(
             e_ResourceType_SoundBuffer)->Fetch("media/sounds/whistle2.wav", true, true);
     whistle[1] = boost::static_pointer_cast<Sound>(
             ObjectFactory::GetInstance().CreateObject("whistle1", e_ObjectType_Sound));
@@ -78,7 +78,9 @@ void Referee::Process() {
 
 
         // some phase is over :[
-
+        if (match->GetMatchPhase() == e_MatchPhase_1stHalf && match->GetMatchTime_ms() > 2700000) {
+            match->GetMatchData()->SetHalfTimeGoalCount();
+        }
         if (((match->GetMatchPhase() == e_MatchPhase_1stHalf && match->GetMatchTime_ms() > 2700000) ||
              (match->GetMatchPhase() == e_MatchPhase_2ndHalf && match->GetMatchTime_ms() > 5400000) ||
              (match->GetMatchPhase() == e_MatchPhase_1stExtraTime && match->GetMatchTime_ms() > 6300000) ||
@@ -344,7 +346,7 @@ void Referee::BallTouched() {
          (buffer.active && buffer.desiredSetPiece != e_SetPiece_ThrowIn))) {
         // check for offside players at moment of touch
         float offside = AI_GetOffsideLine(match, match->GetMentalImage(0), abs(lastTouchTeamID - 1));
-        std::vector<Player *> players;
+        std::vector < Player * > players;
         Team *team = match->GetTeam(lastTouchTeamID);
         match->GetTeam(lastTouchTeamID)->GetActivePlayers(players);
         for (unsigned int i = 0; i < players.size(); i++) {
