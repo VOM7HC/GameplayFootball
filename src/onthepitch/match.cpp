@@ -443,40 +443,73 @@ Match::StoreMatchAction(const string &action, PlayerData *playerData, TeamData *
     matchAction.put("n_AwayGoals", GetMatchData()->GetGoalCount(1));
     matchAction.put("n_HomeGoals", GetMatchData()->GetGoalCount(0));
 
+    int homeOrAway = (teams[0]->GetTeamData() == teamData) ? 0 : 1;
+    matchAction.put("n_HomeOrAway", homeOrAway);
+
     matchActions.push_back(matchAction);
+}
+
+ptree Match::MatchLineup() {
+    ptree matchLineup;
+    for (Team *team: teams) {
+        for (Player *teamPlayer: team->GetAllPlayers()) {
+            ptree inMatchLineup;
+
+            bool redCard = (teamPlayer->GetCards() == 3 || teamPlayer->GetCards() == 4);
+            inMatchLineup.put("b_RedCard", redCard);
+
+            PlayerData *playerData = teamPlayer->GetPlayerData();
+            for (auto role: playerData->GetRoles()) {
+                inMatchLineup.put("c_Function", GetRoleName(role));
+                inMatchLineup.put("c_FunctionShort", GetRoleNameShort(role));
+            }
+            inMatchLineup.put("c_Person", playerData->GetFirstName() + " " + playerData->GetLastName());
+            inMatchLineup.put("c_PersonFirstName", playerData->GetFirstName());
+            inMatchLineup.put("c_PersonLastName", playerData->GetLastName());
+            inMatchLineup.put("c_PersonShort", playerData->GetLastName());
+            inMatchLineup.put("c_PersonSort",
+                              playerData->GetLastName() + ", " + playerData->GetFirstName());
+
+            inMatchLineup.put("c_Team", team->GetTeamData()->GetName());
+            inMatchLineup.put("c_TeamShort", team->GetTeamData()->GetShortName());
+
+            matchLineup.push_back(make_pair("", inMatchLineup));
+        }
+    }
+    return matchLineup;
+}
+
+ptree Match::MatchInfo() {
+    ptree matchInfo, inMatchInfo;
+
+    inMatchInfo.put("c_AwayTeam", teams[1]->GetTeamData()->GetName());
+    inMatchInfo.put("c_HomeTeam", teams[0]->GetTeamData()->GetName());
+
+    string fullTime = to_string(matchData->GetGoalCount(0)) + "-" + to_string(matchData->GetGoalCount(1));
+    string halftime = "(" + to_string(matchData->GetHalfTimeGoalCount(0)) + "-" + to_string(matchData->GetHalfTimeGoalCount(1)) + ")";
+    inMatchInfo.put("c_Score", fullTime + " " + halftime);
+
+    matchInfo.push_back(make_pair("", inMatchInfo));
+    return matchInfo;
+}
+
+ptree Match::MatchAction() {
+    ptree matchAction;
+
+    for (const ptree &inMatchAction: matchActions) {
+        matchAction.push_back(make_pair("", inMatchAction));
+    }
+    return matchAction;
 }
 
 void Match::Exit() {
   if (Verbose()) printf("exiting match.. ");
 
-    ptree pt, children, matchLineup;
+    ptree pt;
 
-    for (const ptree &matchAction: matchActions) {
-        children.push_back(make_pair("", matchAction));
-    }
-    pt.add_child("MatchActions", children);
-
-    for (Team *team: teams) {
-        for (PlayerData *playerData: team->GetTeamData()->GetPlayerData()) {
-            ptree player;
-            for (auto role: playerData->GetRoles()) {
-                player.put("c_Function", GetRoleName(role));
-                player.put("c_FunctionShort", GetRoleNameShort(role));
-            }
-            player.put("c_Person", playerData->GetFirstName() + " " + playerData->GetLastName());
-            player.put("c_PersonFirstName", playerData->GetFirstName());
-            player.put("c_PersonLastName", playerData->GetLastName());
-            player.put("c_PersonShort", playerData->GetLastName());
-            player.put("c_PersonSort",
-                       playerData->GetLastName() + ", " + playerData->GetFirstName());
-
-            player.put("c_Team", team->GetTeamData()->GetName());
-            player.put("c_TeamShort", team->GetTeamData()->GetShortName());
-
-            matchLineup.push_back(make_pair("", player));
-        }
-    }
-    pt.add_child("MatchLineup", matchLineup);
+    pt.add_child("MatchActions", MatchAction());
+    pt.add_child("MatchInfo", MatchInfo());
+    pt.add_child("MatchLineup", MatchLineup());
 
     write_json("output.json", pt);
 
