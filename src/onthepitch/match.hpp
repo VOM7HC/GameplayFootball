@@ -310,8 +310,8 @@ public:
     boost::signals2::signal<void(Match *)> sig_OnCreatedMatch;
     boost::signals2::signal<void(Match *)> sig_OnExitedMatch;
 
-    void
-    StoreMatchAction(const std::string &action, PlayerData *playerData, TeamData *teamData, unsigned long matchTime);
+    void StoreMatchAction(const std::string &action, int actionCodes[], PlayerData *playerData,
+                          TeamData *teamData, unsigned long matchTime);
 
 protected:
     std::list <boost::property_tree::ptree> matchActions;

@@ -251,22 +251,45 @@ void Referee::Process() {
             foul.foulType = 0;
 
             std::string action;
+            int actionCodes[4];
+            actionCodes[3] = 0;
             bool skip = false;
             switch (buffer.desiredSetPiece) {
                 case e_SetPiece_KickOff:
                     action = "Aftrap";
+                    actionCodes[0] = 0;
+                    actionCodes[1] = 2097152;
+                    actionCodes[2] = 1024;
                     break;
                 case e_SetPiece_GoalKick:
                     action = "Doeltrap";
+                    actionCodes[0] = 0;
+                    actionCodes[1] = 2097152;
+                    actionCodes[2] = 2048;
                     break;
                 case e_SetPiece_FreeKick:
                     action = "Vrije Trap";
+                    actionCodes[0] = 0;
+                    actionCodes[1] = 2097152;
+                    actionCodes[2] = 256;
                     break;
                 case e_SetPiece_Corner:
                     action = "Hoekschop";
+                    actionCodes[0] = 0;
+                    actionCodes[1] = 2097152;
+                    actionCodes[2] = 128;
                     break;
                 case e_SetPiece_Penalty:
                     action = "Strafschop";
+                    actionCodes[0] = 0;
+                    actionCodes[1] = 2097152;
+                    actionCodes[2] = 64;
+                    break;
+                case e_SetPiece_ThrowIn:
+                    action = "Inworp";
+                    actionCodes[0] = 0;
+                    actionCodes[1] = 2097152;
+                    actionCodes[2] = 512;
                     break;
                 default:
                     skip = true;
@@ -274,8 +297,8 @@ void Referee::Process() {
             }
 
             if (!skip) {
-                match->StoreMatchAction(action, buffer.taker->GetPlayerData(), buffer.taker->GetTeam()->GetTeamData(),
-                                        match->GetMatchTime_ms());
+                match->StoreMatchAction(action, actionCodes, buffer.taker->GetPlayerData(),
+                                        buffer.taker->GetTeam()->GetTeamData(), match->GetMatchTime_ms());
             }
 
             if (match->GetMatchPhase() == e_MatchPhase_PreMatch) {
@@ -329,7 +352,8 @@ void Referee::BallTouched() {
                     buffer.teamID = abs(lastTouchTeamID - 1);
                     buffer.active = true;
                     match->SpamMessage("offside!");
-                    match->StoreMatchAction("Buitenspel", playerIter->first->GetPlayerData(),
+                    int actionCodes[4] = {262144, 0, 0, 12};
+                    match->StoreMatchAction("Buitenspel", actionCodes, playerIter->first->GetPlayerData(),
                                             match->GetTeam(buffer.teamID)->GetTeamData(),
                                             match->GetMatchTime_ms());
                     break;
@@ -466,7 +490,8 @@ bool Referee::CheckFoul() {
             if (foul.foulType >= 2) buffer.prepareTime += 10000;
             buffer.startTime = buffer.prepareTime + 2000;
             buffer.restartPos = foul.foulPosition;
-            match->StoreMatchAction("Overtreding (vrije trap)", foul.foulPlayer->GetPlayerData(),
+            int actionCodes[4] = {2097152, 0, 0, 12};
+            match->StoreMatchAction("Overtreding (vrije trap)", actionCodes, foul.foulPlayer->GetPlayerData(),
                                     foul.foulPlayer->GetTeam()->GetTeamData(), match->GetMatchTime_ms());
         } else {
             buffer.desiredSetPiece = e_SetPiece_Penalty;
@@ -475,7 +500,8 @@ bool Referee::CheckFoul() {
             if (foul.foulType >= 2) buffer.prepareTime += 10000;
             buffer.startTime = buffer.prepareTime + 2000;
             buffer.restartPos = Vector3((pitchHalfW - 11.0) * foul.foulPlayer->GetTeam()->GetSide(), 0, 0);
-            match->StoreMatchAction("Overtreding (strafschop)", foul.foulPlayer->GetPlayerData(),
+            int actionCodes[4] = {2097152, 0, 0, 12};
+            match->StoreMatchAction("Overtreding (strafschop)", actionCodes, foul.foulPlayer->GetPlayerData(),
                                     foul.foulPlayer->GetTeam()->GetTeamData(),
                                     match->GetMatchTime_ms());
         }
@@ -485,14 +511,16 @@ bool Referee::CheckFoul() {
         if (foul.foulType == 2) {
             spamMessage.append(" yellow card");
             foul.foulPlayer->GiveYellowCard(match->GetActualTime_ms() + 6000); // need to find out proper moment
-            match->StoreMatchAction("Geel", foul.foulPlayer->GetPlayerData(), foul.foulPlayer->GetTeam()->GetTeamData(),
-                                    match->GetMatchTime_ms());
+            int actionCodes[4] = {2048, 0, 0, 3};
+            match->StoreMatchAction("Geel", actionCodes, foul.foulPlayer->GetPlayerData(),
+                                    foul.foulPlayer->GetTeam()->GetTeamData(), match->GetMatchTime_ms());
         }
         if (foul.foulType == 3) {
             spamMessage.append(" red card!!!");
             foul.foulPlayer->GiveRedCard(match->GetActualTime_ms() + 6000); // need to find out proper moment
-            match->StoreMatchAction("Rood", foul.foulPlayer->GetPlayerData(), foul.foulPlayer->GetTeam()->GetTeamData(),
-                                    match->GetMatchTime_ms());
+            int actionCodes[4] = {8192, 0, 0, 3};
+            match->StoreMatchAction("Rood", actionCodes, foul.foulPlayer->GetPlayerData(),
+                                    foul.foulPlayer->GetTeam()->GetTeamData(), match->GetMatchTime_ms());
         }
         match->SpamMessage(spamMessage);
 

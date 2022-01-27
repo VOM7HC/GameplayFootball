@@ -97,7 +97,7 @@ Match::Match(MatchData *matchData, const std::vector<IHIDevice *> &controllers) 
 
     const std::vector<Animation *> &animationsTmp = anims->GetAnimations();
   for (unsigned int i = 0; i < animationsTmp.size(); i++) {
-        std::vector <Vector3> positions;
+        std::vector<Vector3> positions;
     Animation *someAnim = animationsTmp.at(i);
     Quaternion dud;
     Vector3 position;
@@ -109,7 +109,7 @@ Match::Match(MatchData *matchData, const std::vector<IHIDevice *> &controllers) 
       //position.Print();
     }
     //printf("\n");
-        animPositionCache.insert(std::pair < Animation * , std::vector < Vector3 > > (someAnim, positions));
+        animPositionCache.insert(std::pair<Animation *, std::vector<Vector3> >(someAnim, positions));
   }
 
 
@@ -140,7 +140,7 @@ Match::Match(MatchData *matchData, const std::vector<IHIDevice *> &controllers) 
   teams[0]->InitPlayers(fullbodyNode, colorCoords);
   teams[1]->InitPlayers(fullbodyNode, colorCoords);
 
-    std::vector < Player * > activePlayers;
+    std::vector<Player *> activePlayers;
   teams[0]->GetActivePlayers(activePlayers);
   designatedPossessionPlayer = activePlayers.at(0);
   ballRetainer = 0;
@@ -151,7 +151,7 @@ Match::Match(MatchData *matchData, const std::vector<IHIDevice *> &controllers) 
   Log(e_Notice, "Match", "Match", "Creating referee/linesmen models");
 
   std::string kitFilename = "media/objects/players/textures/referee_kit.png";
-    boost::intrusive_ptr <Resource<Surface>> kit = ResourceManagerPool::GetInstance().GetManager<Surface>(
+    boost::intrusive_ptr<Resource<Surface>> kit = ResourceManagerPool::GetInstance().GetManager<Surface>(
             e_ResourceType_Surface)->Fetch(kitFilename);
   officials = new Officials(this, fullbodyNode, colorCoords, kit, anims);
 
@@ -185,13 +185,13 @@ Match::Match(MatchData *matchData, const std::vector<IHIDevice *> &controllers) 
 
   Log(e_Notice, "Match", "Match", "Loading stadium");
 
-    boost::intrusive_ptr <Node> tmpStadiumNode;
+    boost::intrusive_ptr<Node> tmpStadiumNode;
   if (!SuperDebug()) {
     tmpStadiumNode = loader.LoadObject(GetScene3D(), "media/objects/stadiums/test/test.object");
     RandomizeAdboards(tmpStadiumNode);
   }
   if (SuperDebug()) tmpStadiumNode = loader.LoadObject(GetScene3D(), "media/objects/stadiums/test/pitchonly.object");
-    std::list <boost::intrusive_ptr<Geometry>> stadiumGeoms;
+    std::list<boost::intrusive_ptr<Geometry>> stadiumGeoms;
 
   // split stadium geometry into multiple geometry objects, for more efficient culling
   tmpStadiumNode->GetObjects<Geometry>(e_ObjectType_Geometry, stadiumGeoms);
@@ -201,7 +201,7 @@ Match::Match(MatchData *matchData, const std::vector<IHIDevice *> &controllers) 
 
     auto iter = stadiumGeoms.begin();
   while (iter != stadiumGeoms.end()) {
-        boost::intrusive_ptr <Node> tmpNode = SplitGeometry(GetScene3D(), *iter, 24);
+        boost::intrusive_ptr<Node> tmpNode = SplitGeometry(GetScene3D(), *iter, 24);
     tmpNode->SetLocalMode(e_LocalMode_Absolute);
     stadiumNode->AddNode(tmpNode);
 
@@ -255,7 +255,7 @@ Match::Match(MatchData *matchData, const std::vector<IHIDevice *> &controllers) 
 
   Log(e_Notice, "Match", "Match", "Loading crowd sounds");
 
-    boost::intrusive_ptr <Resource<SoundBuffer>> soundBufferRes = ResourceManagerPool::GetInstance().GetManager<SoundBuffer>(
+    boost::intrusive_ptr<Resource<SoundBuffer>> soundBufferRes = ResourceManagerPool::GetInstance().GetManager<SoundBuffer>(
             e_ResourceType_SoundBuffer)->Fetch("media/sounds/crowd01.wav", true, true);
     crowd01 = boost::static_pointer_cast<Sound>(
             ObjectFactory::GetInstance().CreateObject("crowd01sound", e_ObjectType_Sound));
@@ -364,7 +364,7 @@ Match::Match(MatchData *matchData, const std::vector<IHIDevice *> &controllers) 
 
   Log(e_Notice, "Match", "Match", "Initialising replay data array");
 
-    std::list <boost::intrusive_ptr<Spatial>> spatials;
+    std::list<boost::intrusive_ptr<Spatial>> spatials;
   GetReplaySpatials(spatials);
 
     auto spatialIter = spatials.begin();
@@ -422,7 +422,8 @@ Match::~Match() {
 }
 
 void
-Match::StoreMatchAction(const string &action, PlayerData *playerData, TeamData *teamData, unsigned long matchTime) {
+Match::StoreMatchAction(const string &action, int actionCodes[], PlayerData *playerData, TeamData *teamData,
+                        unsigned long matchTime) {
     ptree matchAction;
 
     matchAction.put("c_Action", action);
@@ -439,9 +440,14 @@ Match::StoreMatchAction(const string &action, PlayerData *playerData, TeamData *
     matchAction.put("c_Team", teamData->GetName());
     matchAction.put("c_TeamShort", teamData->GetShortName());
 
+    matchAction.put("n_ActionCode", actionCodes[0]);
+    matchAction.put("n_ActionCode2", actionCodes[1]);
+    matchAction.put("n_ActionCode3", actionCodes[2]);
+    matchAction.put("n_ActionSet", actionCodes[3]);
+
     matchAction.put("n_ActionTime", matchTime);
-    matchAction.put("n_AwayGoals", GetMatchData()->GetGoalCount(1));
     matchAction.put("n_HomeGoals", GetMatchData()->GetGoalCount(0));
+    matchAction.put("n_AwayGoals", GetMatchData()->GetGoalCount(1));
 
     int homeOrAway = (teams[0]->GetTeamData() == teamData) ? 0 : 1;
     matchAction.put("n_HomeOrAway", homeOrAway);
@@ -459,7 +465,9 @@ ptree Match::MatchLineup() {
             inMatchLineup.put("b_RedCard", redCard);
 
             PlayerData *playerData = teamPlayer->GetPlayerData();
+            int functionCode;
             for (auto role: playerData->GetRoles()) {
+                functionCode = GetRoleInt(role);
                 inMatchLineup.put("c_Function", GetRoleName(role));
                 inMatchLineup.put("c_FunctionShort", GetRoleNameShort(role));
             }
@@ -473,6 +481,8 @@ ptree Match::MatchLineup() {
             inMatchLineup.put("c_Team", team->GetTeamData()->GetName());
             inMatchLineup.put("c_TeamShort", team->GetTeamData()->GetShortName());
 
+            inMatchLineup.put("n_FunctionCode", functionCode);
+
             matchLineup.push_back(make_pair("", inMatchLineup));
         }
     }
@@ -482,12 +492,25 @@ ptree Match::MatchLineup() {
 ptree Match::MatchInfo() {
     ptree matchInfo, inMatchInfo;
 
-    inMatchInfo.put("c_AwayTeam", teams[1]->GetTeamData()->GetName());
     inMatchInfo.put("c_HomeTeam", teams[0]->GetTeamData()->GetName());
+    inMatchInfo.put("c_HomeTeamShort", teams[0]->GetTeamData()->GetShortName());
+    inMatchInfo.put("c_AwayTeam", teams[1]->GetTeamData()->GetName());
+    inMatchInfo.put("c_AwayTeamShort", teams[1]->GetTeamData()->GetShortName());
 
     string fullTime = to_string(matchData->GetGoalCount(0)) + "-" + to_string(matchData->GetGoalCount(1));
-    string halftime = "(" + to_string(matchData->GetHalfTimeGoalCount(0)) + "-" + to_string(matchData->GetHalfTimeGoalCount(1)) + ")";
+    string halftime =
+            "(" + to_string(matchData->GetHalfTimeGoalCount(0)) + "-" + to_string(matchData->GetHalfTimeGoalCount(1)) +
+            ")";
     inMatchInfo.put("c_Score", fullTime + " " + halftime);
+
+    using namespace std::chrono;
+    auto date = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+
+    inMatchInfo.put("d_Date", "/Date(" + to_string(date) + ")/");
+    inMatchInfo.put("d_DateLocal", "/Date(" + to_string(date) + ")/");
+
+    inMatchInfo.put("n_HomeGoals", GetMatchData()->GetGoalCount(0));
+    inMatchInfo.put("n_AwayGoals", GetMatchData()->GetGoalCount(1));
 
     matchInfo.push_back(make_pair("", inMatchInfo));
     return matchInfo;
@@ -634,7 +657,7 @@ void Match::SetRandomSunParams() {
   static_pointer_cast<Light>(sunNode->GetObject("sun"))->SetColor(sunColor * brightness);
 }
 
-void Match::RandomizeAdboards(boost::intrusive_ptr <Node> stadiumNode) {
+void Match::RandomizeAdboards(boost::intrusive_ptr<Node> stadiumNode) {
 
   if (Verbose()) printf("randomizing adboards..\n");
 
@@ -642,10 +665,10 @@ void Match::RandomizeAdboards(boost::intrusive_ptr <Node> stadiumNode) {
   // collect texture files
 
   DirectoryParser parser;
-    std::vector <std::string> files;
+    std::vector<std::string> files;
   parser.Parse("media/textures/adboards", "png", files, false);
 
-    std::vector < boost::intrusive_ptr < Resource < Surface > > > adboardSurfaces;
+    std::vector<boost::intrusive_ptr<Resource<Surface> > > adboardSurfaces;
   for (unsigned int i = 0; i < files.size(); i++) {
     Log(e_Notice, "Match", "RandomizeAdboards", "loading adboard file " + files.at(i));
         adboardSurfaces.push_back(
@@ -657,27 +680,27 @@ void Match::RandomizeAdboards(boost::intrusive_ptr <Node> stadiumNode) {
 
   // collect adboard geoms
 
-    std::list <boost::intrusive_ptr<Geometry>> stadiumGeoms;
+    std::list<boost::intrusive_ptr<Geometry>> stadiumGeoms;
   stadiumNode->GetObjects<Geometry>(e_ObjectType_Geometry, stadiumGeoms, true);
   if (Verbose()) printf("number of stadium objects: %lu\n", stadiumGeoms.size());
 
 
   // replace
 
-    std::list < boost::intrusive_ptr < Geometry > > ::const_iterator
+    std::list<boost::intrusive_ptr<Geometry> >::const_iterator
     stadiumGeomsIter = stadiumGeoms.begin();
   while (stadiumGeomsIter != stadiumGeoms.end()) {
 
-        boost::intrusive_ptr <Geometry> geomObject = *stadiumGeomsIter;
+        boost::intrusive_ptr<Geometry> geomObject = *stadiumGeomsIter;
     assert(geomObject != boost::intrusive_ptr<Object>());
-        boost::intrusive_ptr <Resource<GeometryData>> adboardGeom = geomObject->GetGeometryData();
+        boost::intrusive_ptr<Resource<GeometryData>> adboardGeom = geomObject->GetGeometryData();
 
     adboardGeom->resourceMutex.lock();
 
-        std::vector <MaterializedTriangleMesh> &tmesh = adboardGeom->GetResource()->GetTriangleMeshesRef();
+        std::vector<MaterializedTriangleMesh> &tmesh = adboardGeom->GetResource()->GetTriangleMeshesRef();
 
     for (unsigned int i = 0; i < tmesh.size(); i++) {
-            if (tmesh.at(i).material.diffuseTexture != boost::intrusive_ptr < Resource < Surface > > ()) {
+            if (tmesh.at(i).material.diffuseTexture != boost::intrusive_ptr<Resource<Surface> >()) {
         std::string identString = tmesh.at(i).material.diffuseTexture->GetIdentString();
         //printf("%s\n", identString.c_str());
         if (identString.find("ad_placeholder") == 0) {
@@ -705,7 +728,7 @@ void Match::UpdateControllerSetup() {
   teams[1]->DeleteHumanGamers();
 
   // add new
-    const std::vector <SideSelection> sides = menuTask->GetControllerSetup();
+    const std::vector<SideSelection> sides = menuTask->GetControllerSetup();
   for (unsigned int i = 0; i < sides.size(); i++) {
     if (sides.at(i).side != 0) {
       int teamID = int(round(sides.at(i).side * 0.5 + 0.5));
@@ -1128,7 +1151,8 @@ void Match::Process() {
           if (lastGoalScorer) {
                         SpamMessage("GOAL for " + matchData->GetTeamData(GetLastGoalTeamID())->GetName() + "! " +
                                     lastGoalScorer->GetPlayerData()->GetLastName() + " scores!", 4000);
-                        StoreMatchAction("Doelpunt", lastGoalScorer->GetPlayerData(),
+                        int actionCodes[4] = {4, 0, 0, 1};
+                        StoreMatchAction("Doelpunt", actionCodes, lastGoalScorer->GetPlayerData(),
                                          GetTeam(lastGoalTeamID)->GetTeamData(), GetMatchTime_ms());
           } else {
             SpamMessage("GOAL!!!", 4000);
@@ -1138,7 +1162,8 @@ void Match::Process() {
           if (lastGoalScorer) {
                         SpamMessage("OWN GOAL! " + lastGoalScorer->GetPlayerData()->GetLastName() + " is so unlucky!",
                                     4000);
-                        StoreMatchAction("Eigen doelpunt", lastGoalScorer->GetPlayerData(),
+                        int actionCodes[4] = {64, 0, 0, 1};
+                        StoreMatchAction("Eigen doelpunt", actionCodes, lastGoalScorer->GetPlayerData(),
                                          GetTeam(lastGoalTeamID)->GetTeamData(), GetMatchTime_ms());
           } else {
             SpamMessage("It's an OWN GOAL! oh noes!", 4000);
@@ -1246,7 +1271,7 @@ void Match::Process() {
                           real_to_str(pos.coords[2]) + "\n";
     positionLogFile << bla.c_str();
 
-        std::vector < Player * > playas;
+        std::vector<Player *> playas;
     int count = 1;
     for (int teamID = 0; teamID < 2; teamID++) {
       bla = "    team" + int_to_str(teamID + 1) + ":\n";
@@ -1454,7 +1479,7 @@ void Match::Put() {
 
 }
 
-boost::intrusive_ptr <Node> Match::GetDynamicNode() {
+boost::intrusive_ptr<Node> Match::GetDynamicNode() {
   return dynamicNode;
 }
 
@@ -1494,13 +1519,13 @@ void Match::ApplyReplayFrame(unsigned long replayTime_ms) {
 
   }
 
-    std::vector < Player * > players;
+    std::vector<Player *> players;
   GetActiveTeamPlayers(0, players);
   GetActiveTeamPlayers(1, players);
   for (unsigned int i = 0; i < players.size(); i++) {
     players.at(i)->UpdateFullbodyNodes();
   }
-    std::vector < PlayerBase * > playerOfficials;
+    std::vector<PlayerBase *> playerOfficials;
   GetOfficialPlayers(playerOfficials);
   for (unsigned int i = 0; i < playerOfficials.size(); i++) {
     playerOfficials.at(i)->UpdateFullbodyNodes();
@@ -1517,7 +1542,7 @@ void Match::ApplyReplayFrame(unsigned long replayTime_ms) {
   }
 }
 
-void Match::GetReplaySpatials(std::list <boost::intrusive_ptr<Spatial>> &spatials) {
+void Match::GetReplaySpatials(std::list<boost::intrusive_ptr<Spatial>> &spatials) {
 
   spatials.push_back(teams[0]->GetSceneNode());
   teams[0]->GetSceneNode()->GetSpatials(spatials);
@@ -1534,14 +1559,14 @@ void Match::GetReplaySpatials(std::list <boost::intrusive_ptr<Spatial>> &spatial
   spatials.push_back(officials->GetYellowCardGeom());
   spatials.push_back(officials->GetRedCardGeom());
 
-    std::vector < Player * > players;
+    std::vector<Player *> players;
   GetActiveTeamPlayers(0, players);
   GetActiveTeamPlayers(1, players);
   for (unsigned int i = 0; i < players.size(); i++) {
     spatials.push_back(players.at(i)->GetHumanoidNode());
     players.at(i)->GetHumanoidNode()->GetSpatials(spatials);
   }
-    std::vector < PlayerBase * > playerOfficials;
+    std::vector<PlayerBase *> playerOfficials;
   GetOfficialPlayers(playerOfficials);
   for (unsigned int i = 0; i < playerOfficials.size(); i++) {
     spatials.push_back(playerOfficials.at(i)->GetHumanoidNode());
@@ -1621,17 +1646,17 @@ void Match::CalculateBestPossessionTeamID() {
 }
 
 void Match::CheckHumanoidCollisions() {
-    std::vector < Player * > players;
+    std::vector<Player *> players;
 
   GetTeam(0)->GetActivePlayers(players);
   GetTeam(1)->GetActivePlayers(players);
 
   // outer vectors index == players[] index
-    std::vector <std::vector<PlayerBounce>> playerBounces;
+    std::vector<std::vector<PlayerBounce>> playerBounces;
 
   // insert an empty entry for every player
   for (unsigned int i1 = 0; i1 < players.size(); i1++) {
-        std::vector <PlayerBounce> bounce;
+        std::vector<PlayerBounce> bounce;
     playerBounces.push_back(bounce);
   }
 
@@ -1687,8 +1712,8 @@ void Match::CheckHumanoidCollisions() {
 
 }
 
-void Match::CheckHumanoidCollision(Player *p1, Player *p2, std::vector <PlayerBounce> &p1Bounce,
-                                   std::vector <PlayerBounce> &p2Bounce) {
+void Match::CheckHumanoidCollision(Player *p1, Player *p2, std::vector<PlayerBounce> &p1Bounce,
+                                   std::vector<PlayerBounce> &p2Bounce) {
   float distanceFactor = 0.72f;
   float bouncePlayerRadius = 0.5f * distanceFactor;
   float similarPlayerRadius = 0.8f * distanceFactor;
@@ -2002,8 +2027,8 @@ void Match::CheckHumanoidCollision(Player *p1, Player *p2, std::vector <PlayerBo
          p2->GetCurrentFunctionType() == e_FunctionType_Interfere) && p2->GetFrameNum() > 5 && p2->GetFrameNum() < 28)
         tackle += 2;
   if (distance < 2.0f && tackle > 0 && tackle < 3) { // if tackle is 3, ignore both
-        std::list <boost::intrusive_ptr<Geometry>> tacklerObjectList;
-        std::list <boost::intrusive_ptr<Geometry>> victimObjectList;
+        std::list<boost::intrusive_ptr<Geometry>> tacklerObjectList;
+        std::list<boost::intrusive_ptr<Geometry>> victimObjectList;
     /*
     if (tackle == 0) { // todo: this way, p1 would have an advantage
       if (p1->GetCurrentFunctionType() == e_FunctionType_Trap ||
@@ -2038,7 +2063,7 @@ void Match::CheckHumanoidCollision(Player *p1, Player *p2, std::vector <PlayerBo
     }
 
     // iterate through all body parts of tackler
-        std::list < boost::intrusive_ptr < Geometry > > ::iterator
+        std::list<boost::intrusive_ptr<Geometry> >::iterator
         objIter = tacklerObjectList.begin();
     while (objIter != tacklerObjectList.end()) {
 
@@ -2048,7 +2073,7 @@ void Match::CheckHumanoidCollision(Player *p1, Player *p2, std::vector <PlayerBo
       objAABB.minxyz += 0.1f;
       objAABB.maxxyz -= 0.1f;
 
-            std::list < boost::intrusive_ptr < Geometry > > ::iterator
+            std::list<boost::intrusive_ptr<Geometry> >::iterator
             victimIter = victimObjectList.begin();
       while (victimIter != victimObjectList.end()) {
 
@@ -2097,11 +2122,11 @@ void Match::CheckBallCollisions() {
   //printf("%i - %i hihi\n", actualTime_ms, lastBodyBallCollisionTime_ms + 150);
   if (actualTime_ms <= lastBodyBallCollisionTime_ms + 150) return;
 
-    std::vector < Player * > players;
+    std::vector<Player *> players;
   GetTeam(0)->GetActivePlayers(players);
   GetTeam(1)->GetActivePlayers(players);
 
-    std::list <boost::intrusive_ptr<Geometry>> objectList;
+    std::list<boost::intrusive_ptr<Geometry>> objectList;
   Vector3 bounceVec;
   float bias = 0.0;
   int bounceCount = 0; // this shit is shit, average properly in combination with bias or something like that
@@ -2169,7 +2194,7 @@ void Match::CheckBallCollisions() {
                     2.5f) { // premature optimization is the root of all evil :D
           players[i]->GetHumanoidNode()->GetObjects(e_ObjectType_Geometry, objectList);
 
-                    std::list < boost::intrusive_ptr < Geometry > > ::iterator
+                    std::list<boost::intrusive_ptr<Geometry> >::iterator
                     objIter = objectList.begin();
           while (objIter != objectList.end()) {
 
@@ -2330,7 +2355,7 @@ void Match::ProcessReplayMessages() {
 void Match::PrepareGoalNetting() {
 
   // collect vertices into nettingMeshes[0..1]
-    std::vector <MaterializedTriangleMesh> &triangleMesh = boost::static_pointer_cast<Geometry>(
+    std::vector<MaterializedTriangleMesh> &triangleMesh = boost::static_pointer_cast<Geometry>(
             goalsNode->GetObject("goals"))->GetGeometryData()->GetResource()->GetTriangleMeshesRef();
 
   for (unsigned int m = 0; m < triangleMesh.size(); m++) {

@@ -127,6 +127,23 @@ e_FunctionType StringToFunctionType(const std::string &fun) {
     if (fun.compare("special") == 0) return e_FunctionType_Special;
     return e_FunctionType_None;
 }
+
+int GetRoleInt(e_PlayerRole playerRole) {
+    switch (playerRole) {
+        case e_PlayerRole_GK: return 1;
+        case e_PlayerRole_CB: return 2;
+        case e_PlayerRole_LB: return 2;
+        case e_PlayerRole_RB: return 2;
+        case e_PlayerRole_DM: return 4;
+        case e_PlayerRole_CM: return 4;
+        case e_PlayerRole_LM: return 4;
+        case e_PlayerRole_RM: return 4;
+        case e_PlayerRole_AM: return 8;
+        case e_PlayerRole_CF: return 8;
+        default: return 0;
+    }
+}
+
 std::string GetRoleName(e_PlayerRole playerRole) {
     switch (playerRole) {
         case e_PlayerRole_GK: return "Keeper";
@@ -137,7 +154,7 @@ std::string GetRoleName(e_PlayerRole playerRole) {
         case e_PlayerRole_CM: return "Middenvelder";
         case e_PlayerRole_LM: return "Middenvelder";
         case e_PlayerRole_RM: return "Middenvelder";
-        case e_PlayerRole_AM: return "Middenvelder";
+        case e_PlayerRole_AM: return "Aanvaller";
         case e_PlayerRole_CF: return "Aanvaller";
         default: return "undefined";
     }
@@ -153,7 +170,7 @@ std::string GetRoleNameShort(e_PlayerRole playerRole) {
         case e_PlayerRole_CM: return "M";
         case e_PlayerRole_LM: return "M";
         case e_PlayerRole_RM: return "M";
-        case e_PlayerRole_AM: return "M";
+        case e_PlayerRole_AM: return "A";
         case e_PlayerRole_CF: return "A";
         default: return "undefined";
     }

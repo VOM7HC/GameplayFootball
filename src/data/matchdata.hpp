@@ -26,7 +26,9 @@ public:
 
     int GetHalfTimeGoalCount(int id) { return halfTimeGoalCount[id]; }
 
-    void SetHalfTimeGoalCount() { halfTimeGoalCount[0] = goalCount[0]; halfTimeGoalCount[1] = goalCount[1]; }
+    void SetHalfTimeGoalCount() {
+        std::copy(std::begin(goalCount), std::end(goalCount), std::begin(halfTimeGoalCount));
+    }
 
     void AddPossessionTime_10ms(int teamID);
 
@@ -43,7 +45,7 @@ protected:
     TeamData *teamData[2];
 
     int goalCount[2];
-    int halfTimeGoalCount[2];
+    int halfTimeGoalCount[2] = {0, 0};
 
     unsigned long possessionTime_ms[2];
     float possession60seconds; // -600 to 600 for possession of team 1 / 2 respectively
