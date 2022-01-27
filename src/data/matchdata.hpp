@@ -13,23 +13,37 @@
 
 class MatchData {
 
-  public:
+public:
     MatchData(int team1DatabaseID, int team2DatabaseID);
+
     virtual ~MatchData();
 
     TeamData *GetTeamData(int id) { return teamData[id]; }
+
     int GetGoalCount(int id) { return goalCount[id]; }
+
     void SetGoalCount(int id, int amount) { goalCount[id] = amount; }
+
+    int GetHalfTimeGoalCount(int id) { return halfTimeGoalCount[id]; }
+
+    void SetHalfTimeGoalCount() { halfTimeGoalCount[0] = goalCount[0]; halfTimeGoalCount[1] = goalCount[1]; }
+
     void AddPossessionTime_10ms(int teamID);
+
     unsigned long GetPossessionTime_ms(int teamID) { return possessionTime_ms[teamID]; }
-    float GetPossessionFactor_60seconds() { return possession60seconds / 60.0f * 0.5f + 0.5f; } // REMEMBER THESE ARE IRL INGAME SECONDS (because, I guess the tactics should be based on irl possession time instead of gametime? not sure yet, think about this)
+
+    float GetPossessionFactor_60seconds() {
+        return possession60seconds / 60.0f * 0.5f + 0.5f;
+    } // REMEMBER THESE ARE IRL INGAME SECONDS (because, I guess the tactics should be based on irl possession time instead of gametime? not sure yet, think about this)
     void AddShot(int teamID) { shots[teamID] += 1; }
+
     int GetShots(int teamID) { return shots[teamID]; }
 
-  protected:
+protected:
     TeamData *teamData[2];
 
     int goalCount[2];
+    int halfTimeGoalCount[2];
 
     unsigned long possessionTime_ms[2];
     float possession60seconds; // -600 to 600 for possession of team 1 / 2 respectively
