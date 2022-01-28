@@ -30,6 +30,8 @@ public:
         std::copy(std::begin(goalCount), std::end(goalCount), std::begin(halfTimeGoalCount));
     }
 
+    int halfTimeGoalCount[2] = {0, 0};
+
     void AddPossessionTime_10ms(int teamID);
 
     unsigned long GetPossessionTime_ms(int teamID) { return possessionTime_ms[teamID]; }
@@ -45,7 +47,6 @@ protected:
     TeamData *teamData[2];
 
     int goalCount[2];
-    int halfTimeGoalCount[2] = {0, 0};
 
     unsigned long possessionTime_ms[2];
     float possession60seconds; // -600 to 600 for possession of team 1 / 2 respectively

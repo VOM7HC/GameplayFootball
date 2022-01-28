@@ -57,8 +57,8 @@ struct ReplaySpatial {
         frames = boost::circular_buffer<ReplaySpatialFrame>(frameCount);
     }
 
-    boost::intrusive_ptr <Spatial> spatial;
-    boost::circular_buffer <ReplaySpatialFrame> frames;
+    boost::intrusive_ptr<Spatial> spatial;
+    boost::circular_buffer<ReplaySpatialFrame> frames;
 };
 
 struct PlayerBounce {
@@ -118,7 +118,7 @@ public:
 
     void SetRandomSunParams();
 
-    void RandomizeAdboards(boost::intrusive_ptr <Node> stadiumNode);
+    void RandomizeAdboards(boost::intrusive_ptr<Node> stadiumNode);
 
     void UpdateControllerSetup();
 
@@ -138,7 +138,7 @@ public:
 
     void GetOfficialPlayers(std::vector<PlayerBase *> &players);
 
-    boost::shared_ptr <AnimCollection> GetAnimCollection() { return anims; }
+    boost::shared_ptr<AnimCollection> GetAnimCollection() { return anims; }
 
     const MentalImage *GetMentalImage(int history_ms);
 
@@ -240,9 +240,9 @@ public:
 
     void UpdateIngameCamera();
 
-    boost::intrusive_ptr <Camera> GetCamera() { return camera; }
+    boost::intrusive_ptr<Camera> GetCamera() { return camera; }
 
-    boost::shared_ptr <AnimCollection> GetAnims() { return anims; }
+    boost::shared_ptr<AnimCollection> GetAnims() { return anims; }
 
     void Get();
 
@@ -254,7 +254,7 @@ public:
 
     void Put();
 
-    boost::intrusive_ptr <Node> GetDynamicNode();
+    boost::intrusive_ptr<Node> GetDynamicNode();
 
     void ApplyReplayFrame(unsigned long replayTime_ms);
 
@@ -276,7 +276,7 @@ public:
 
     void ProcessReplayMessages();
 
-    Lockable <ReplayState> replayState;
+    Lockable<ReplayState> replayState;
 
     MatchData *GetMatchData() { return matchData; }
 
@@ -284,7 +284,7 @@ public:
 
     float GetMatchDifficulty() const { return matchDifficulty; }
 
-    std::vector <Vector3> &GetAnimPositionCache(Animation *anim) { return animPositionCache.find(anim)->second; }
+    std::vector<Vector3> &GetAnimPositionCache(Animation *anim) { return animPositionCache.find(anim)->second; }
 
     void UploadGoalNetting();
 
@@ -314,7 +314,8 @@ public:
                           TeamData *teamData, unsigned long matchTime);
 
 protected:
-    std::list <boost::property_tree::ptree> matchActions;
+    std::chrono::milliseconds matchStartTime;
+    std::list<boost::property_tree::ptree> matchActions;
 
     ptree MatchAction();
 
@@ -322,7 +323,7 @@ protected:
 
     ptree MatchLineup();
 
-    void GetReplaySpatials(std::list <boost::intrusive_ptr<Spatial>> &spatials);
+    void GetReplaySpatials(std::list<boost::intrusive_ptr<Spatial>> &spatials);
 
     void CaptureReplayFrame(unsigned long replayTime_ms);
 
@@ -332,8 +333,8 @@ protected:
 
     void CheckHumanoidCollisions();
 
-    void CheckHumanoidCollision(Player *p1, Player *p2, std::vector <PlayerBounce> &p1Bounce,
-                                std::vector <PlayerBounce> &p2Bounce);
+    void CheckHumanoidCollision(Player *p1, Player *p2, std::vector<PlayerBounce> &p1Bounce,
+                                std::vector<PlayerBounce> &p2Bounce);
 
     void CheckBallCollisions();
 
@@ -354,14 +355,14 @@ protected:
 
     Officials *officials;
 
-    boost::intrusive_ptr <Node> dynamicNode;
+    boost::intrusive_ptr<Node> dynamicNode;
 
-    boost::intrusive_ptr <Node> cameraNode;
-    boost::intrusive_ptr <Camera> camera;
-    boost::intrusive_ptr <Node> sunNode;
+    boost::intrusive_ptr<Node> cameraNode;
+    boost::intrusive_ptr<Camera> camera;
+    boost::intrusive_ptr<Node> sunNode;
 
-    boost::intrusive_ptr <Node> stadiumNode;
-    boost::intrusive_ptr <Node> goalsNode;
+    boost::intrusive_ptr<Node> stadiumNode;
+    boost::intrusive_ptr<Node> goalsNode;
 
     // camera user settings
     float cameraUserZoom;
@@ -369,7 +370,7 @@ protected:
     float cameraUserFOV;
     float cameraUserAngleFactor;
 
-    boost::shared_ptr <AnimCollection> anims;
+    boost::shared_ptr<AnimCollection> anims;
 
     const std::vector<IHIDevice *> &controllers;
 
@@ -409,8 +410,8 @@ protected:
 
     bool gameOver;
 
-    boost::intrusive_ptr <Node> fullbodyNode;
-    std::map <Vector3, Vector3> colorCoords;
+    boost::intrusive_ptr<Node> fullbodyNode;
+    std::map<Vector3, Vector3> colorCoords;
 
     ValueHistory<float> *possessionSideHistory;
 
@@ -441,19 +442,19 @@ protected:
 
     unsigned int lastBodyBallCollisionTime_ms;
 
-    std::deque <Vector3> camPos; // todo: circular buffer?
+    std::deque<Vector3> camPos; // todo: circular buffer?
 
     Referee *referee;
 
-    boost::shared_ptr <MenuTask> menuTask;
+    boost::shared_ptr<MenuTask> menuTask;
 
-    boost::shared_ptr <Scene3D> scene3D;
+    boost::shared_ptr<Scene3D> scene3D;
 
-    boost::intrusive_ptr <Sound> crowd01;
-    boost::intrusive_ptr <Sound> crowd02;
+    boost::intrusive_ptr<Sound> crowd01;
+    boost::intrusive_ptr<Sound> crowd02;
 
     std::vector<ReplaySpatial *> replay;
-    boost::circular_buffer <ReplayBallTouchesNetFrame> replayBallTouchesNetFrames;
+    boost::circular_buffer<ReplayBallTouchesNetFrame> replayBallTouchesNetFrames;
     bool resetNetting;
     bool nettingHasChanged;
 
@@ -463,10 +464,10 @@ protected:
 
     float matchDurationFactor;
 
-    std::map<Animation *, std::vector < Vector3> >
-    animPositionCache;
+    std::map<Animation *, std::vector<Vector3> >
+            animPositionCache;
 
-    std::vector <Vector3> nettingMeshesSrc[2];
+    std::vector<Vector3> nettingMeshesSrc[2];
     std::vector<float *> nettingMeshes[2];
 
     //boost::intrusive_ptr<Light> lightTest[100];
