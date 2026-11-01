@@ -227,7 +227,7 @@ distinguish serializer/startup checks from full gameplay testing.
 ## Match reports
 
 Optional JSON match reports are available for PASS-style analysis. Reporting is
-disabled by default; see [setup, schema, and attribution](README_PASS.md).
+disabled by default; see [setup, schema, and attribution](FORK_BRANCH_INVENTORY.md#pass-match-reports).
 
 ## Source layout
 

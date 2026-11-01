@@ -4,7 +4,7 @@
 
 #include "match.hpp"
 
-// Modified: optional PASS reporting adapted from Tijmen Krijnen; see README_PASS.md.
+// Modified: optional PASS reporting adapted from Tijmen Krijnen; see FORK_BRANCH_INVENTORY.md (R030).
 
 #include "../main.hpp"
 
