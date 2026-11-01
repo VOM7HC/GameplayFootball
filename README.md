@@ -163,6 +163,15 @@ subsystem variant, configure with `-DGAMEPLAYFOOTBALL_WINDOWS_SUBSYSTEM=ON`.
 Both variants link SDL2main. The Windows CI workflow builds both variants; a
 passing compile does not replace a GPU, input, audio, and shutdown smoke test.
 
+## Continuous integration
+
+[macOS build](.github/workflows/macos-build.yml) compiles the Apple Silicon Release
+preset and checks the executable architecture and staged assets. It bootstraps
+vcpkg at the manifest baseline and enforces the project's VLA compiler guard.
+[Windows build](.github/workflows/windows-build.yml) builds the Win32 console and
+GUI variants. Both workflows run on pull requests, pushes to `main` or `mac`,
+and manual dispatch. These are build checks; gameplay still needs local testing.
+
 ## Portability and validation
 
 C++ targets use standard C++14, and GCC/Clang builds reject variable-length arrays

@@ -1,0 +1,36 @@
+name: macOS build
+
+on:
+  pull_request:
+  push:
+    branches: [main, mac]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apple-silicon:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up vcpkg
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git "$RUNNER_TEMP/vcpkg"
+          baseline=$(python3 -c 'import json; print(json.load(open("vcpkg.json"))["builtin-baseline"])')
+          git -C "$RUNNER_TEMP/vcpkg" checkout "$baseline"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+      - name: Configure Apple Silicon Release
+        run: cmake --preset mac-vcpkg
+      - name: Build Apple Silicon Release
+        run: cmake --build --preset mac-vcpkg --parallel 3
+      - name: Check executable and staged assets
+        shell: bash
+        run: |
+          lipo -verify_arch arm64 build/mac-vcpkg/gameplayfootball
+          test -f build/mac-vcpkg/football.config
+          test -d build/mac-vcpkg/databases
+          test -d build/mac-vcpkg/media
