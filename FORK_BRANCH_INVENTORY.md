@@ -45,7 +45,7 @@ Sorted by newest branch-tip committer timestamp. Each numbered entry has its bra
 | [R027](#r027) | [sturdy-robot/GameplayFootball](https://github.com/sturdy-robot/GameplayFootball) | `main` | 2 | 2024-11-06 00:50:28 | 2024-12-27 10:01:48 |
 | [R028](#r028) | [CasonCaly/GameplayFootball](https://github.com/CasonCaly/GameplayFootball) | `master` | 1 | 2023-12-26 17:18:20 | 2023-12-26 17:18:25 |
 | [R029](#r029) | [gattilorenz/GameplayFootball](https://github.com/gattilorenz/GameplayFootball) | `master` | 4 | 2023-02-11 00:14:14 | 2023-02-11 00:14:21 |
-| [R030](#r030) 🛠️ Draft PR #5 — awaiting review | [tijmenkrijnen/GameplayFootball](https://github.com/tijmenkrijnen/GameplayFootball) | `master` | 4 | 2022-01-29 06:36:44 | 2022-01-29 06:36:47 |
+| [R030](#r030) ✅ Accepted / PR #5 | [tijmenkrijnen/GameplayFootball](https://github.com/tijmenkrijnen/GameplayFootball) | `master` | 4 | 2022-01-29 06:36:44 | 2022-01-29 06:36:47 |
 | [R031](#r031) 🌟 Major upstream / fork foundation | [vi3itor/GameplayFootball](https://github.com/vi3itor/GameplayFootball) | `master` | 4 | 2021-11-16 16:06:24 | 2024-01-17 00:05:23 |
 | [R032](#r032) ❌ Do not merge | [sbd021/GameplayFootball](https://github.com/sbd021/GameplayFootball) | `master` | 4 | 2021-11-16 16:06:24 | 2021-11-16 16:06:28 |
 | [R033](#r033) ❌ Do not merge | [sasaspo/GameplayFootball](https://github.com/sasaspo/GameplayFootball) | `master` | 4 | 2021-11-16 16:06:24 | 2024-01-17 00:05:23 |
@@ -520,7 +520,7 @@ Sorted by newest branch-tip committer timestamp. Each numbered entry has its bra
 
 <a id="r030"></a>
 
-### R030 — tijmenkrijnen/GameplayFootball — 🛠️ Draft PR #5 — awaiting review
+### R030 — tijmenkrijnen/GameplayFootball — ✅ Accepted / PR #5
 
 [Repository](https://github.com/tijmenkrijnen/GameplayFootball) · Default: `master` · Archived: false · Repository pushed: 2022-01-29 06:36:47
 
@@ -531,154 +531,30 @@ Sorted by newest branch-tip committer timestamp. Each numbered entry has its bra
 | [prepare-merge](https://github.com/tijmenkrijnen/GameplayFootball/tree/prepare-merge) | [`7862c76804b2ccd671d0840fa2e3894356cdcb23`](https://github.com/tijmenkrijnen/GameplayFootball/commit/7862c76804b2ccd671d0840fa2e3894356cdcb23) | 2021-11-16 16:06:24 | Update macOS instructions |
 | [windows](https://github.com/tijmenkrijnen/GameplayFootball/tree/windows) | [`1dc1518abd0ffaa349c7e1a53ded6ba19213c73f`](https://github.com/tijmenkrijnen/GameplayFootball/commit/1dc1518abd0ffaa349c7e1a53ded6ba19213c73f) | 2021-08-21 19:39:32 | Update Visual Studio build with CMake (#8) |
 
-#### Review decision — 2026-11-02
+**Decision:** Adapted the optional PASS-format match-report exporter in [PR #5](https://github.com/VOM7HC/GameplayFootball/pull/5), on `squash_fork_01`. All seven upstream commits retain Tijmen Krijnen's authorship; fixes are separate commits. See the PR history for individual commits.
 
-**Worth considering as an adapted, focused PR: match-report JSON export. Do not directly merge or blindly cherry-pick this fork.** The initial pass was review-only. The owner subsequently authorized cherry-picking the seven commits, preserving authorship, fixing the findings, and opening a replacement PR without merging.
+**Changes:** Corrected card classification and event attribution, captured starting roles and halftime scores, and made export optional with unique output locations and safe error handling. Existing database names, UI role labels, send-off behavior, and renderer are preserved.
 
-Reviewed `master` at `0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e` against current `main` (`12a60eda892583929c2ed168402155b925348065`). The report feature is absent from current `main`. The other three recorded branches match vi3itor's reference tips rather than providing additional report work.
-
-#### Seven feature commits
-
-These are the seven commits after vi3itor's `68159a2`; older SQLite/shutdown changes in the branch history are not part of the proposed feature port.
-
-| Commit | Contribution |
-| --- | --- |
-| [`a7dd3daed`](https://github.com/tijmenkrijnen/GameplayFootball/commit/a7dd3daed0f2bd081a2df2a92b8851554c45c862) | Collect match events in Boost.PropertyTree and export JSON. |
-| [`24a6db5df`](https://github.com/tijmenkrijnen/GameplayFootball/commit/24a6db5df55f03359310f64eb945121da3553fc4) | Add player lineups; also modifies the database and role names. |
-| [`57641d634`](https://github.com/tijmenkrijnen/GameplayFootball/commit/57641d634e6957f3c204f04b77b0feeedf2ee1b1) | Add match information and more event/lineup fields. |
-| [`8685826b4`](https://github.com/tijmenkrijnen/GameplayFootball/commit/8685826b4865d3a12066143d8e114fd854078c30) | Store halftime goals in `MatchData`. |
-| [`e903db471`](https://github.com/tijmenkrijnen/GameplayFootball/commit/e903db471b0062642fb79d207d58b0b004e77389) | Capture halftime goals through the referee flow. |
-| [`58c6fd926`](https://github.com/tijmenkrijnen/GameplayFootball/commit/58c6fd926b2d2f36126258fdf9b01beceb614241) | Add PASS event/role codes and report timestamps. |
-| [`0506df2b3`](https://github.com/tijmenkrijnen/GameplayFootball/commit/0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e) | Add documentation/sample, start time, and second-yellow event reporting. |
-
-#### Useful work to retain
-
-- A report containing `MatchActions`, `MatchInfo`, and `MatchLineup`: goals/own goals, fouls, cards, offsides, kickoffs, goal kicks, free kicks, corners, penalties, and throw-ins, with match time and score snapshots.
-- Match/player/team information and kickoff/start timestamps, plus a halftime score snapshot.
-- [README_PASS.md](https://github.com/tijmenkrijnen/GameplayFootball/blob/0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e/README_PASS.md) and [example_output.json](https://github.com/tijmenkrijnen/GameplayFootball/blob/0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e/example_output.json) as documentation of the intended PASS integration. The sample parses as JSON and contains 13 actions, one match-info entry, and 36 lineup entries.
-- This is an event-summary/reporting feature, not full match-state recording or an exporter for every pass/shot. It does not change the engine's existing send-off rules; the final commit adds a report record to that path.
-
-#### Findings to fix before porting
-
-| Finding | Evidence and consequence | Adaptation needed |
-| --- | --- | --- |
-| Direct red also reported as second yellow | [`player.cpp:349–354`](https://github.com/tijmenkrijnen/GameplayFootball/blob/0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e/src/onthepitch/player/player.cpp#L349) adds `Rood (2x geel)` whenever `cards > 1`. A direct red adds 3, so it enters this path as well as the direct-red record in `referee.cpp:533`. | Distinguish the actual dismissal reason and record each event once. |
-| Offside player/team mismatch | [`referee.cpp:353–361`](https://github.com/tijmenkrijnen/GameplayFootball/blob/0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e/src/onthepitch/referee.cpp#L353) sets `buffer.teamID` to the team awarded the free kick but pairs that team with the offending player's data. | Record the actor's actual team; distinguish the beneficiary if the report needs both. Define own-goal actor/beneficiary semantics too. |
-| Export overwrites the prior match and can interrupt cleanup | [`match.cpp:589–606`](https://github.com/tijmenkrijnen/GameplayFootball/blob/0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e/src/onthepitch/match.cpp#L589) calls `write_json("output.json", pt)` unconditionally inside `Exit`, before cleanup, without error handling. This also exports abandoned matches. | Make export optional, use unique/configurable output paths, handle errors without skipping cleanup, and identify completed versus abandoned reports. |
-| Lineup role handling loses information | [`match.cpp:511–516`](https://github.com/tijmenkrijnen/GameplayFootball/blob/0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e/src/onthepitch/match.cpp#L511) overwrites the same role fields for every database role, so only the final role remains. `functionCode` is uninitialized if the role list is empty. It uses preferred database roles rather than necessarily the actual match formation role. | Define whether a lineup reports actual formation role or preferred roles; support empty/multiple roles safely. |
-| Reporting changes existing UI role labels | [`gamedefines.cpp:147`](https://github.com/tijmenkrijnen/GameplayFootball/blob/0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e/src/gamedefines.cpp#L147) replaces `GK`, `CB`, etc. with broad Dutch labels. Current `main` uses `GetRoleName` in the formation GUI. | Put export-specific labels/codes in the report adapter; preserve existing role names. |
-| JSON schema needs an explicit choice | The sample serializes numbers and booleans as strings, uses PASS-specific Dutch labels/codes and `/Date(milliseconds)/` values, and PropertyTree's empty child does not express an empty JSON array reliably. | Confirm PASS compatibility versus a general typed schema; test empty events, escaping, names, numeric/boolean types, and timestamps. Do not assume all string values are accidental if PASS expects them. |
-| Database changes are unrelated to implementing export | Binary databases were opened and compared: schemas match, but eight team rows change names and thirteen player rows change names/accents. Some base names contain non-UTF-8 bytes. | Exclude the database replacement. Handle text encoding explicitly if producing UTF-8 reports, rather than renaming players as an encoding fix. |
-| Broad formatting and old build edits obscure the feature | The fork mixes reporting with reformatting, old CMake policies/include changes, and unrelated member initializers. | Adapt only event/report additions onto current `main`; preserve its current CMake, dependencies, platform work, and style. |
-
-#### Proposed future PR
-
-Suggested scope: **Add optional match-event and result JSON export**, credited to Tijmen's original seven commits. Implement the report collector/serializer separately from game presentation; add minimal event and halftime hooks, a configurable opt-in output directory, unique filenames, and safe failure handling. Preserve current UI labels and database content.
-
-Before implementation, choose **general typed JSON** or **PASS-compatible output**; do not silently promise both. Verify goals and own goals, both kinds of red-card dismissal, offside attribution, halftime capture, empty/abandoned matches, repeated match exports, invalid output paths, and player-name encoding. Then build Windows console/GUI and macOS targets as available; packaged runtime smoke testing remains separate from unit/serialization checks.
-
-**Original review boundary:** findings above describe the unadapted upstream fork and were based on static source/schema/database review. See the subsequent implementation update below.
-
-#### Implementation update — 2026-11-02
-
-[Draft replacement PR #5](https://github.com/VOM7HC/GameplayFootball/pull/5) is open against `main` from `squash_fork_01` in VOM7HC's repository. **Not merged; awaiting the owner's review.** Replaces PR #4, closed by GitHub when its head branch was renamed to `squash_fork_01`; the original source PR #3 is also closed.
-
-All seven cherry-picks preserve Tijmen's author name, email, original author dates, and source-commit trailers. GitHub's PR API resolves all seven to `tijmenkrijnen`. The adaptation is a separate VOM7HC-authored commit. Use a merge commit when eventually approving if the individual original authored commits should remain in default-branch history.
-
-| Original commit | Cherry-picked commit |
-| --- | --- |
-| `a7dd3daed` | `750a3c102cb6afb26239a5269b274415da009281` |
-| `24a6db5df` | `ba1cb0a18251ba0ec440da7a9060891369c757cc` |
-| `57641d634` | `de74a7458d0c5d1e25d22e21f00d6d1ee9b282b2` |
-| `8685826b4` | `2018f453c6639e940a227b3d9b418b9941dfff79` |
-| `e903db471` | `0705a308ba48ea4783e85214ac43a60875b67194` |
-| `58c6fd926` | `85251165c9b4008b47af54b8b97b7b670092abb9` |
-| `0506df2b3` | `619175801e5ef832bc91d16ccb44cd1cb1a18ea4` |
-
-Adaptation commit: `21584967056b1477d78666dfb6b739c9b5309543`. PASS-format export is optional, with separate actor/beneficiary attribution, corrected card events, starting-role snapshots, defined unknown/bench roles, one-shot halftime capture, completed/abandoned status, proper empty arrays, valid UTF-8 output, unique report locations, and warning-only write failures. The database, UI role labels, player send-off logic, and renderer remain identical to the base `main`.
-
-Validation: local Visual Studio 2026 x64 Release console and GUI builds passed; headless CTest regressions passed; example JSON independently validated with Python and regenerated byte-for-byte; workflow actionlint passed. Windows/macOS PR checks were pending when this note was written. The real-game smoke test failed before match creation while loading OpenGL `glDeleteProgram` (`GL 3.x is not supported`); no matching baseline executable was available for a controlled comparison. Actual match-event export, full gameplay, and external PASS integration are not claimed as runtime-verified. This inventory is now included in PR #5 and contains the reporting documentation directly, as requested.
+**Validation:** Windows console/GUI builds, macOS ARM64 CI, and report regression tests passed. The local game smoke test stopped at OpenGL initialization (`glDeleteProgram` unavailable), before match creation. Actual match-event export and external PASS integration remain unverified.
 
 <a id="pass-match-reports"></a>
 
-#### Optional match reports (PASS format)
+#### Optional match reports
 
-This feature adapts [Tijmen Krijnen's seven 2022 commits](https://github.com/tijmenkrijnen/GameplayFootball/compare/68159a2f0f96eec8ebba26ab7820130f36b922a7...0506df2b36ecb1fd1ed233ae4dc0a1495ad8320e).
-His original author identity and source-commit references are retained in this
-branch's history. The reporting implementation has been modified to preserve
-current game behavior and handle output errors safely.
-
-##### Enable reporting
-
-Reporting is off by default. Add a line to the `football.config` used by the game:
+Reporting is off by default. Add this to the game's `football.config`:
 
 ```text
 "match_report_directory" "match-reports"
 ```
 
-The directory is relative to the game's working directory; an absolute path also
-works. Remove the setting, or leave its value empty, to disable collection and
-export. Each match snapshots this setting when it is created.
+Leaving a match writes `match-reports/match-<start-ms>-<unique-id>/report.json`; paths are relative to the game's working directory unless absolute. Remove the setting to disable reporting. Write failures produce a warning without stopping cleanup; slow storage may delay exit.
 
-Leaving a match writes `match-reports/match-<start-ms>-<unique-id>/report.json`.
-Each match reserves its own directory, so games with the same start timestamp
-cannot overwrite each other's reports. JSON is written to a temporary file and
-renamed after closing successfully. A write error is logged as a warning and
-does not prevent normal match cleanup. Reporting is synchronous at match exit,
-so a slow output filesystem may delay that exit.
+- Arrays: `MatchActions`, `MatchInfo`, and `MatchLineup`. PASS labels/codes, string-valued scalars, and `/Date(milliseconds)/` epoch dates are retained; empty arrays stay `[]`.
+- Events record goals, set pieces, offsides, fouls, and cards, with score/time snapshots. `n_HomeOrAway` is the actor's team; `n_BeneficiaryHomeOrAway` identifies the awarded team (0 home, 1 away, -1 unspecified).
+- Lineups retain the roster and starting formation roles. `b_Starter` distinguishes bench players; unknown roles use code 0. Names remain UTF-8, with invalid source bytes replaced in the report only.
+- Match status is `completed` or `abandoned`. `b_HalfTimeKnown` distinguishes a captured halftime score from an unknown one. Start time includes loading; legacy `Local` date fields contain the same epoch instant.
 
-##### Report contents
-
-The three top-level arrays remain `MatchActions`, `MatchInfo`, and `MatchLineup`.
-The inherited Dutch event labels, PASS codes, string-valued numbers/booleans, and
-`/Date(milliseconds)/` Unix-epoch dates are retained. Empty lists are JSON arrays
-(`[]`), not empty strings. This is a PASS-format adaptation; compatibility with an
-external PASS installation has not been tested.
-
-- Actions include kickoffs, goal kicks, free kicks, corners, penalties, throw-ins,
-  goals/own goals, offsides, fouls, and cards. Events snapshot match time, phase,
-  and score when recorded. This is not a complete pass/shot or player-position log.
-- `n_HomeOrAway` identifies the actor's team (0 home, 1 away, -1 unknown).
-  `n_BeneficiaryHomeOrAway` separately identifies the team awarded a goal or
-  restart, when relevant; -1 means not specified. An own-goal scorer remains
-  associated with their own team. Unknown scorers retain empty person fields
-  and the known actor team rather than disappearing from the report.
-- Cards are recorded when awarded. A second yellow produces the yellow event and
-  a separate second-yellow dismissal. A direct red produces only a direct-red
-  event. Existing card delays and send-off gameplay rules are unchanged.
-- `MatchLineup` includes the roster, with starting roles captured from the actual
-  formation at match creation. `b_Starter` distinguishes starters from the bench;
-  bench/unknown roles have code 0. Sent-off starters remain in the roster and have
-  `b_RedCard` set. Export-only role labels do not change the formation UI.
-- `MatchInfo.c_Status` is `completed` after the engine's game-over condition,
-  otherwise `abandoned`. Abandoning a game still produces a report. Halftime goals
-  are captured once on transition to the second half. `b_HalfTimeKnown` is false
-  until that transition; unknown halftime scores are not fabricated as 0-0.
-- Start/end timestamps are 64-bit milliseconds since the Unix epoch. The legacy
-  `Local` fields contain the same epoch instant, not a timezone-shifted timestamp.
-  Match start here means match object creation, including loading.
-- Valid UTF-8 player/team names are preserved and JSON-escaped. Invalid source
-  bytes are replaced with U+FFFD in the report. The bundled database is unchanged;
-  no player or team is renamed to work around encoding problems.
-
-See [example_output.json](example_output.json) for a synthetic regression example.
-Regenerate it with `match_report_tests --example example_output.json` after building.
-
-##### Validation
-
-The serializer and file writer are independent of the renderer and window system.
-With `BUILD_TESTING=ON` (the default), build and run:
-
-```text
-cmake --build <build-directory> --config Release --parallel
-ctest --test-dir <build-directory> -C Release --output-on-failure
-```
-
-Tests cover action codes and attribution, direct-red versus second-yellow records,
-score/date fields, abandoned/empty reports, roster roles, UTF-8 and JSON escaping,
-repeated-match filenames, and invalid output paths. The Windows and macOS CI
-workflows run these tests. Builds and serializer tests do not replace checking
-real match events and exit behavior on each platform.
+[Example JSON](example_output.json). Run tests with `ctest --test-dir <build-directory> -C Release --output-on-failure`; regenerate the example with `match_report_tests --example example_output.json`.
 
 <a id="r031"></a>
 
