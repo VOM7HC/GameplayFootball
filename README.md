@@ -14,10 +14,11 @@ reinforcement learning environment derived from the game in 2019. The
 
 | Target | Verification |
 | --- | --- |
-| macOS Apple Silicon | Release build passed with vcpkg; startup initialized OpenGL 4.1 and audio. Full gameplay has not been verified. |
-| macOS Intel | Build commands provided below; not verified. |
+| macOS ARM64 | Release build passed with vcpkg; startup initialized OpenGL 4.1 and audio. Full gameplay has not been verified. |
+| macOS x64 | To do: build and runtime validation. |
 | Linux | Not verified with the current vcpkg configuration. |
-| Windows | Work in progress; not verified with the current vcpkg configuration. |
+| Windows x64 | Local Visual Studio 2026 Release build passed; intro and quick-start match rendered with OpenGL and audio initialized. Keyboard/gamepad input and full gameplay remain unverified. |
+| Windows ARM64 | To do: build and runtime validation. |
 
 The macOS startup check emitted a texture warning. A successful build and context
 initialization do not establish that every scene renders correctly.
@@ -59,16 +60,16 @@ export VCPKG_ROOT="$HOME/vcpkg"
 If vcpkg is already installed, set `VCPKG_ROOT` to that checkout instead. Set this
 variable again in each new terminal session, or add it to your shell profile.
 
-### Build for Apple Silicon
+### Build for ARM64
 
 Run from the GameplayFootball repository root:
 
 ```bash
-cmake --preset mac-vcpkg
-cmake --build --preset mac-vcpkg --parallel "$(sysctl -n hw.logicalcpu)"
+cmake --preset mac-arm64-vcpkg
+cmake --build --preset mac-arm64-vcpkg --parallel "$(sysctl -n hw.logicalcpu)"
 ```
 
-The preset creates a Release build in `build/mac-vcpkg` using `arm64-osx`.
+The preset creates a Release build in `build/mac-arm64-vcpkg` using `arm64-osx`.
 The first configure takes longer because vcpkg downloads and builds dependencies.
 Later builds reuse installed dependencies and vcpkg's binary cache.
 
@@ -77,8 +78,8 @@ Later builds reuse installed dependencies and vcpkg's binary cache.
 Copy the game data into the build directory, then run from that directory:
 
 ```bash
-cp -R data/. build/mac-vcpkg/
-cd build/mac-vcpkg
+cp -R data/. build/mac-arm64-vcpkg/
+cd build/mac-arm64-vcpkg
 ./gameplayfootball
 ```
 
@@ -86,19 +87,19 @@ The working directory must contain `football.config`, `databases/`, and `media/`
 CMake also stages these assets beside the executable after linking. Copy them again after changing
 files under `data/`; this also replaces the staged configuration file.
 
-### Build for Intel
+### Build for x64 (to do)
 
 Use a separate directory and override the preset's triplet:
 
 ```bash
-cmake --preset mac-vcpkg -B build/mac-vcpkg-intel -DVCPKG_TARGET_TRIPLET=x64-osx
-cmake --build build/mac-vcpkg-intel --parallel "$(sysctl -n hw.logicalcpu)"
-cp -R data/. build/mac-vcpkg-intel/
-cd build/mac-vcpkg-intel
+cmake --preset mac-arm64-vcpkg -B build/mac-x64-vcpkg -DVCPKG_TARGET_TRIPLET=x64-osx
+cmake --build build/mac-x64-vcpkg --parallel "$(sysctl -n hw.logicalcpu)"
+cp -R data/. build/mac-x64-vcpkg/
+cd build/mac-x64-vcpkg
 ./gameplayfootball
 ```
 
-Intel builds and execution have not been verified.
+macOS x64 builds and execution are to do.
 
 ### Compatibility notes
 
@@ -137,8 +138,8 @@ packages for your distribution and desktop environment.
 
 ## Windows
 
-Windows support is a work in progress. These commands describe the manifest
-workflow; the merged code still needs an MSVC build and runtime check. Install
+Windows x64 has passed a local Visual Studio 2026 Release build and a match rendering check.
+Full input, audio playback, and shutdown validation are still needed. Install
 Visual Studio 2022 with the **Desktop development with C++** workload, Git, and
 CMake. Use a Visual Studio Developer
 Command Prompt.
@@ -149,12 +150,12 @@ call C:\dev\vcpkg\bootstrap-vcpkg.bat -disableMetrics
 set VCPKG_ROOT=C:\dev\vcpkg
 ```
 
-From the GameplayFootball repository root, configure the original 32-bit target:
+From the GameplayFootball repository root, configure the x64 target:
 
 ```bat
-cmake --preset windows-vcpkg
-cmake --build --preset windows-vcpkg --parallel
-cd build\windows-vcpkg\Release
+cmake --preset windows-x64-vcpkg
+cmake --build --preset windows-x64-vcpkg --parallel
+cd build\windows-x64-vcpkg\Release
 gameplayfootball.exe
 ```
 
@@ -163,13 +164,20 @@ subsystem variant, configure with `-DGAMEPLAYFOOTBALL_WINDOWS_SUBSYSTEM=ON`.
 Both variants link SDL2main. The Windows CI workflow builds both variants; a
 passing compile does not replace a GPU, input, audio, and shutdown smoke test.
 
+### Windows ARM64 (to do)
+
+Add a separate preset and CI job, then validate the build and runtime on Windows
+ARM64 hardware. This target is not enabled yet.
+
 ## Continuous integration
 
-[macOS build](.github/workflows/macos-build.yml) compiles the Apple Silicon Release
+[macOS ARM64 build](.github/workflows/macos-build.yml) compiles the ARM64 Release
 preset and checks the executable architecture and staged assets. It bootstraps
 vcpkg at the manifest baseline and enforces the project's VLA compiler guard.
-[Windows build](.github/workflows/windows-build.yml) builds the Win32 console and
-GUI variants. Both workflows run on pull requests, pushes to `main` or `mac`,
+[Windows x64 build](.github/workflows/windows-build.yml) builds the Windows x64 console and
+GUI variants. It also clones vcpkg and checks out the manifest baseline before
+bootstrapping, so it does not depend on the runner's preinstalled vcpkg history.
+Both workflows run on pull requests, pushes to `main` or `mac`,
 and manual dispatch. These are build checks; gameplay still needs local testing.
 
 ## Portability and validation
@@ -182,9 +190,9 @@ macOS requests an OpenGL core profile; Windows and Linux retain a compatibility
 profile for the remaining immediate-mode calls. SQLite is supplied by vcpkg on
 all platforms, and surface resizing uses SDL2 without SDL2_gfx.
 
-The Apple Silicon Release build passed with all 177 C++ compilation commands
+The ARM64 Release build passed with all 177 C++ compilation commands
 using `-std=c++14` and `-Werror=vla`. This validates the compiled macOS paths;
-Windows-specific code still requires an MSVC build.
+Windows x64 also passed a local MSVC Release build; Windows ARM64 is still to do.
 
 Before merging platform changes:
 
