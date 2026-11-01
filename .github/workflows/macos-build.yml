@@ -1,4 +1,4 @@
-name: macOS build
+name: macOS ARM64 build
 
 on:
   pull_request:
@@ -10,7 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  apple-silicon:
+  macos-arm64:
+    name: macOS ARM64
     runs-on: macos-15
     timeout-minutes: 60
     steps:
@@ -23,14 +24,14 @@ jobs:
           git -C "$RUNNER_TEMP/vcpkg" checkout "$baseline"
           "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
           echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
-      - name: Configure Apple Silicon Release
-        run: cmake --preset mac-vcpkg
-      - name: Build Apple Silicon Release
-        run: cmake --build --preset mac-vcpkg --parallel 3
+      - name: Configure macOS ARM64 Release
+        run: cmake --preset mac-arm64-vcpkg
+      - name: Build macOS ARM64 Release
+        run: cmake --build --preset mac-arm64-vcpkg --parallel 3
       - name: Check executable and staged assets
         shell: bash
         run: |
-          lipo build/mac-vcpkg/gameplayfootball -verify_arch arm64
-          test -f build/mac-vcpkg/football.config
-          test -d build/mac-vcpkg/databases
-          test -d build/mac-vcpkg/media
+          lipo build/mac-arm64-vcpkg/gameplayfootball -verify_arch arm64
+          test -f build/mac-arm64-vcpkg/football.config
+          test -d build/mac-arm64-vcpkg/databases
+          test -d build/mac-arm64-vcpkg/media
