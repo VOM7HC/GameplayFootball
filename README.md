@@ -138,8 +138,9 @@ packages for your distribution and desktop environment.
 ## Windows
 
 Windows support is a work in progress. These commands describe the manifest
-workflow; the merged code still needs an MSVC build and runtime check. Install Visual Studio 2022 with the **Desktop
-development with C++** workload, Git, and CMake. Use a Visual Studio Developer
+workflow; the merged code still needs an MSVC build and runtime check. Install
+Visual Studio 2022 with the **Desktop development with C++** workload, Git, and
+CMake. Use a Visual Studio Developer
 Command Prompt.
 
 ```bat
@@ -162,13 +163,28 @@ subsystem variant, configure with `-DGAMEPLAYFOOTBALL_WINDOWS_SUBSYSTEM=ON`.
 Both variants link SDL2main. The Windows CI workflow builds both variants; a
 passing compile does not replace a GPU, input, audio, and shutdown smoke test.
 
-## Merge portability checks
+## Portability and validation
 
 C++ targets use standard C++14, and GCC/Clang builds reject variable-length arrays
 with `-Werror=vla`. Keep dynamically sized storage in `std::vector` so MSVC can
 compile the same source. The Windows replacements in loaders, animation,
 renderer buffers, pitch generation, team AI, and GUI layout are retained.
-See [the merge review](docs/mac-windows-merge.md) for evidence and remaining checks.
+macOS requests an OpenGL core profile; Windows and Linux retain a compatibility
+profile for the remaining immediate-mode calls. SQLite is supplied by vcpkg on
+all platforms, and surface resizing uses SDL2 without SDL2_gfx.
+
+The Apple Silicon Release build passed with all 177 C++ compilation commands
+using `-std=c++14` and `-Werror=vla`. This validates the compiled macOS paths;
+Windows-specific code still requires an MSVC build.
+
+Before merging platform changes:
+
+1. Build the Windows console and GUI variants using the
+   [Windows build workflow](.github/workflows/windows-build.yml).
+2. On Windows and macOS, launch from the staged executable directory and check
+   menus, a match, keyboard/gamepad input, audio, and exit.
+3. Inspect `log.txt` for the OpenGL adapter/version and rendering errors. Resolve
+   or investigate the macOS texture warning before claiming visual validation.
 
 ## Troubleshooting
 
