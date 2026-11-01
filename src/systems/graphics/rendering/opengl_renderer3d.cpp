@@ -26,6 +26,10 @@
 //#include <GL/glcorearb.h>  // can be used to check for core profile only
 #endif
 
+#ifdef WIN32
+#include <SDL2/SDL_opengl_glext.h>
+#endif
+
 #include <cmath>
 #include <SDL2/SDL.h>
 
@@ -42,9 +46,6 @@
 
 #include "../resources/texture.hpp"
 
-#ifdef WIN32
-#include <wingdi.h>
-#endif
 
 namespace blunted {
 
@@ -302,6 +303,7 @@ struct GLfunctions {
 
   void OpenGLRenderer3D::DeleteSimpleVertexBuffer(VertexBufferID vertexBufferID) {
     GLuint glVertexBufferID = vertexBufferID.bufferID;
+    //Log(e_Notice, "OpenGLRenderer3D", "DeleteSimpleVertexBuffer", "Deleting simple vertex buffer, id " + int_to_str(vertexBufferID.bufferID));
     mapping.glDeleteBuffers(1, &glVertexBufferID);
 
     GLuint glVertexArrayID = vertexBufferID.vertexArrayID;
@@ -350,7 +352,10 @@ struct GLfunctions {
 
 //#ifdef WIN32
     // SDL subsystems must be initialized before setting attributes
-    SDL_Init(SDL_INIT_VIDEO);
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+      Log(e_Error, "OpenGLRenderer3D", "CreateContext", "SDL video initialization failed: " + std::string(SDL_GetError()));
+      return false;
+    }
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -364,7 +369,13 @@ struct GLfunctions {
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#ifdef __APPLE__
+    // macOS exposes modern OpenGL only through a core profile.
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#else
+    // Preserve Windows/Linux support for the remaining immediate-mode calls.
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+#endif
 
     // todo: remember to enable this later on, after migrating to sdl 2 (though it is on by default with most drivers, or so it seems)
     //SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
@@ -378,7 +389,28 @@ struct GLfunctions {
                                 SDL_WINDOWPOS_UNDEFINED, width, height,
                                 SDL_WINDOW_OPENGL /* | SDL_RESIZABLE*/ |
                                 (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
+    if (!window) {
+      Log(e_Error, "OpenGLRenderer3D", "CreateContext", "SDL window creation failed: " + std::string(SDL_GetError()));
+      return false;
+    }
     context = SDL_GL_CreateContext(window);
+    if (!context) {
+      Log(e_Error, "OpenGLRenderer3D", "CreateContext", "OpenGL context creation failed: " + std::string(SDL_GetError()));
+      SDL_DestroyWindow(window);
+      window = 0;
+      return false;
+    }
+
+    // Capture the actual adapter/context before loading extension functions.
+    // This is especially useful on Windows systems with hybrid or DisplayLink
+    // graphics, where the active OpenGL provider may be limited to 1.1.
+    const GLubyte *contextVersion = ::glGetString(GL_VERSION);
+    const GLubyte *glVendor = ::glGetString(GL_VENDOR);
+    const GLubyte *glRenderer = ::glGetString(GL_RENDERER);
+    printf("OpenGL context: version=%s vendor=%s renderer=%s\n",
+           contextVersion ? reinterpret_cast<const char *>(contextVersion) : "unknown",
+           glVendor ? reinterpret_cast<const char *>(glVendor) : "unknown",
+           glRenderer ? reinterpret_cast<const char *>(glRenderer) : "unknown");
 
 
     //    *reinterpret_cast<void**>(&(mapping.func)) =
@@ -390,9 +422,14 @@ struct GLfunctions {
         SDL_GL_GetProcAddress(#func);                                      \
     if (!mapping.func) {                                                   \
       printf("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
-      SDL_SetError("Couldn't load GL function %s: %s\n", #func,            \
-                   SDL_GetError());                                        \
-      exit(1);                                                             \
+      const std::string error = "Couldn't load GL function " #func ": " +  \
+          std::string(SDL_GetError());                                     \
+      Log(e_Error, "OpenGLRenderer3D", "CreateContext", error);           \
+      SDL_GL_DeleteContext(context);                                        \
+      context = 0;                                                          \
+      SDL_DestroyWindow(window);                                             \
+      window = 0;                                                           \
+      return false;                                                         \
     }                                                                      \
   } while (0);
 #include "sdl_glfuncs.h"
@@ -406,11 +443,6 @@ struct GLfunctions {
     mapping.glGetIntegerv(GL_MINOR_VERSION, &glVersion[1]);
 
     Log(e_Notice, "OpenGLRenderer3D", "CreateContext", "OpenGL major/minor " + int_to_str(glVersion[0]) + "." + int_to_str(glVersion[1]));
-    if (!context) {
-      std::string errorString = SDL_GetError();
-      Log(e_FatalError, "OpenGLRenderer3D", "CreateContext", "Failed on SDL error: " + errorString);
-      return false;
-    }
     bool higherThan32 = false;
     if (glVersion[0] < 4) {
       if (glVersion[0] == 3 && glVersion[1] >= 2) higherThan32 = true;
@@ -463,7 +495,7 @@ struct GLfunctions {
 
 #ifdef WIN32
     bool success = false;//wglSwapIntervalEXT(-1);
-    if (!success) wglSwapIntervalEXT(1);
+    //if (!success) wglSwapIntervalEXT(1);
     //if (!success) printf("ANTI TEAR NOT SUPPORTED\n\n\n\n\n");
 #endif
 
@@ -1032,6 +1064,7 @@ struct GLfunctions {
   }
 
   void OpenGLRenderer3D::DeleteVertexBuffer(VertexBufferID vertexBufferID) {
+    //Log(e_Notice, "OpenGLRenderer3D", "DeleteVertexBuffer", "Deleting vertex buffer, id " + int_to_str(vertexBufferID.bufferID));
     GLuint glVertexBufferID = vertexBufferID.bufferID;
     mapping.glDeleteBuffers(1, &glVertexBufferID);
 
@@ -1775,11 +1808,11 @@ struct GLfunctions {
   // render targets
 
   void OpenGLRenderer3D::SetRenderTargets(std::vector<e_TargetAttachment> targetAttachments) {
-    GLenum targets[targetAttachments.size()];
+    std::vector<GLenum> targets(targetAttachments.size());
     for (int i = 0; i < (signed int)targetAttachments.size(); i++) {
       targets[i] = GetGLTargetAttachment(targetAttachments.at(i));
     }
-    mapping.glDrawBuffers(targetAttachments.size(), targets);
+    mapping.glDrawBuffers(targetAttachments.size(), targets.data());
   }
 
 
@@ -1853,8 +1886,8 @@ struct GLfunctions {
     if (!usePrecalculatedSet || kernelSize != 32) {
       unsigned int candidateSize = 32;
 
-      Vector3 samples[kernelSize];
-      Vector3 candidates[candidateSize];
+      std::vector<Vector3> samples(kernelSize);
+      std::vector<Vector3> candidates(candidateSize);
 
       for (unsigned int i = 0; i < kernelSize; i++) {
 
@@ -1914,7 +1947,7 @@ struct GLfunctions {
 
     } else { // PRECALCULATED SET
 
-      Vector3 samples[kernelSize];
+      std::vector<Vector3> samples(kernelSize);
 
       // these samples seem relatively close to z = 0 (much 'ground effect' on flat surface)
       samples[0].Set(-0.164502, 0.198563, 0.847836);
@@ -2054,7 +2087,7 @@ struct GLfunctions {
 
       unsigned int kernelSize = 32;
       //SetUniformInt("ambient", "SSAO_kernelSize", kernelSize);
-      float SSAO_kernel[kernelSize * 3];
+      std::vector<float> SSAO_kernel(kernelSize * 3);
       GeneratePoissonKernel(&SSAO_kernel[0], kernelSize);
       SetUniformFloat3Array("ambient", "SSAO_kernel", kernelSize, &SSAO_kernel[0]);
     }

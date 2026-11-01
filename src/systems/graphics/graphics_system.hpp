@@ -54,9 +54,8 @@ namespace blunted {
 
       virtual std::string GetName() const { return "graphics"; }
 
-      // On macOS the renderer must run on the process main thread.
-      // Call this from main() instead of Run() to pump SDL events and process
-      // all renderer messages on the main thread.  Returns when the game quits.
+      // Pump SDL/Cocoa events on the macOS main thread until the game quits.
+      // Rendering and renderer messages remain on the renderer thread.
       void RunMainLoop();
 
       boost::mutex getPhaseMutex;

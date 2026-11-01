@@ -301,9 +301,8 @@ namespace blunted {
       virtual void HDRCaptureOverallBrightness() = 0;
       virtual float HDRGetOverallBrightness() = 0;
 
-      // Run the render/event loop on the calling thread (macOS main-thread path).
-      // Exits when EnvironmentManager signals quit and the message queue drains.
-      // The default no-op is used on platforms where the renderer runs as a Thread.
+      // Pump platform events on the calling thread until the game quits.
+      // macOS calls this on the main thread; other platforms use the default no-op.
       virtual void RunLoop() {}
 
       void operator()() = 0;

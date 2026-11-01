@@ -29,7 +29,7 @@ initialization do not establish that every scene renders correctly.
 - [vcpkg](https://github.com/microsoft/vcpkg) to build third-party dependencies.
 
 The root `vcpkg.json` declares SDL2, SDL2_image (including JPEG support), SDL2_ttf,
-SDL2_gfx, Boost components, OpenAL Soft, and SQLite. Its baseline pins dependency
+Boost components, OpenAL Soft, and SQLite. Its baseline pins dependency
 versions. CMake installs these automatically when configured with the vcpkg
 toolchain; a separate `vcpkg install` command is unnecessary.
 
@@ -83,7 +83,7 @@ cd build/mac-vcpkg
 ```
 
 The working directory must contain `football.config`, `databases/`, and `media/`.
-CMake does not stage these assets automatically. Copy them again after changing
+CMake also stages these assets beside the executable after linking. Copy them again after changing
 files under `data/`; this also replaces the staged configuration file.
 
 ### Build for Intel
@@ -102,7 +102,7 @@ Intel builds and execution have not been verified.
 
 ### Compatibility notes
 
-- The macOS graphics loop runs on the main thread.
+- macOS creates the window and pumps events on the main thread; OpenGL rendering runs on its renderer thread.
 - OpenAL Soft is pinned to `1.23.1#2`. Version 1.25.2 failed to compile with the
   selected Apple Command Line Tools because their C++ library lacked
   `std::views::join`.
@@ -138,7 +138,7 @@ packages for your distribution and desktop environment.
 ## Windows
 
 Windows support is a work in progress. These commands describe the manifest
-workflow; they have not been verified. Install Visual Studio with the **Desktop
+workflow; the merged code still needs an MSVC build and runtime check. Install Visual Studio 2022 with the **Desktop
 development with C++** workload, Git, and CMake. Use a Visual Studio Developer
 Command Prompt.
 
@@ -151,12 +151,24 @@ set VCPKG_ROOT=C:\dev\vcpkg
 From the GameplayFootball repository root, configure the original 32-bit target:
 
 ```bat
-cmake -S . -B build/windows-vcpkg -A Win32 -DVCPKG_TARGET_TRIPLET=x86-windows -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake"
-cmake --build build/windows-vcpkg --config Release --parallel
-xcopy /E /I /Y data build\windows-vcpkg\Release
+cmake --preset windows-vcpkg
+cmake --build --preset windows-vcpkg --parallel
 cd build\windows-vcpkg\Release
 gameplayfootball.exe
 ```
+
+The default Windows executable keeps a console for diagnostics. To build the GUI
+subsystem variant, configure with `-DGAMEPLAYFOOTBALL_WINDOWS_SUBSYSTEM=ON`.
+Both variants link SDL2main. The Windows CI workflow builds both variants; a
+passing compile does not replace a GPU, input, audio, and shutdown smoke test.
+
+## Merge portability checks
+
+C++ targets use standard C++14, and GCC/Clang builds reject variable-length arrays
+with `-Werror=vla`. Keep dynamically sized storage in `std::vector` so MSVC can
+compile the same source. The Windows replacements in loaders, animation,
+renderer buffers, pitch generation, team AI, and GUI layout are retained.
+See [the merge review](docs/mac-windows-merge.md) for evidence and remaining checks.
 
 ## Troubleshooting
 
@@ -184,7 +196,7 @@ game, and distinguish startup checks from full gameplay testing.
 | `src/menu/`, `src/hid/` | Menus and input handling |
 | `data/` | Configuration, databases, shaders, and other game assets |
 | `CMakeLists.txt`, `sources.cmake` | Build targets and source lists |
-| `vcpkg.json`, `CMakePresets.json` | Dependency versions and macOS build preset |
+| `vcpkg.json`, `CMakePresets.json` | Dependency versions and platform build presets |
 
 ## Contributing
 

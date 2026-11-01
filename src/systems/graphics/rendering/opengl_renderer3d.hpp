@@ -133,9 +133,8 @@ namespace blunted {
       // on the process's main thread so that Cocoa / NSApp is set up correctly).
       void InitSDL();
 
-      // Run the event-pump + renderer message loop on the calling thread.
-      // Used on macOS where the whole OpenGL pipeline must live on the main thread.
-      // Returns when EnvironmentManager::GetQuit() is true and the queue is empty.
+      // Pump SDL/Cocoa events on the macOS main thread until the game quits.
+      // OpenGL rendering and its message queue stay on the renderer thread.
       virtual void RunLoop() override;
 
       void operator()();

@@ -1,0 +1,27 @@
+name: Windows build
+
+on:
+  pull_request:
+  push:
+    branches: [main, mac]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  msvc:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select runner vcpkg
+        shell: pwsh
+        run: '"VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV'
+      - name: Configure Win32 console executable
+        run: cmake --preset windows-vcpkg
+      - name: Build Win32 console executable
+        run: cmake --build --preset windows-vcpkg --parallel
+      - name: Configure Win32 GUI executable
+        run: cmake --preset windows-vcpkg -DGAMEPLAYFOOTBALL_WINDOWS_SUBSYSTEM=ON
+      - name: Build Win32 GUI executable
+        run: cmake --build --preset windows-vcpkg --parallel

@@ -11,12 +11,28 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "arm64-osx"
       }
+    },
+    {
+      "name": "windows-vcpkg",
+      "displayName": "Windows Win32 (vcpkg)",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "Win32",
+      "binaryDir": "${sourceDir}/build/windows-vcpkg",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x86-windows"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "mac-vcpkg",
       "configurePreset": "mac-vcpkg"
+    },
+    {
+      "name": "windows-vcpkg",
+      "configurePreset": "windows-vcpkg",
+      "configuration": "Release"
     }
   ]
 }

@@ -17,7 +17,6 @@
       ]
     },
     "sdl2-ttf",
-    "sdl2-gfx",
     "openal-soft",
     "sqlite3"
   ],

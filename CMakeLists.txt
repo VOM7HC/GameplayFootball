@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 
 set(PACKAGE GameplayFootball)
 
@@ -11,11 +11,21 @@ else(${VERSION_PATCH})
    set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
 endif(${VERSION_PATCH})
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 project(GameplayFootball)
 
-set (CMAKE_CXX_STANDARD 14)
+option(GAMEPLAYFOOTBALL_WINDOWS_SUBSYSTEM
+   "Build without a console window on Windows" OFF)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Keep MSVC portability failures visible on macOS and Linux too.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+   add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Werror=vla>")
+endif()
 
 if(UNIX)
    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Wall")
@@ -23,31 +33,40 @@ if(UNIX)
    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-variable -Wno-sign-compare -Wno-unused-function -Wno-strict-aliasing")
    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -O3")
 endif(UNIX)
+
+if(MSVC)
+   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -GL")
+   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -LTCG")
+   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -LTCG")
+   set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} -LTCG")
+endif(MSVC)
+
 # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -fPIC -g -O3")
 # SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fPIC -O3 -g")
 
-# Use package targets so static dependency libraries and system frameworks
-# are carried through to the executable by vcpkg.
+# Find required libraries
 find_package(OpenGL REQUIRED)
+
 find_package(SDL2 CONFIG REQUIRED)
+
 find_package(SDL2_image CONFIG REQUIRED)
+
 find_package(SDL2_ttf CONFIG REQUIRED)
-find_package(sdl2-gfx CONFIG REQUIRED)
+
 find_package(Boost CONFIG REQUIRED COMPONENTS thread filesystem)
+
 find_package(OpenAL CONFIG REQUIRED)
 find_package(SQLite3 REQUIRED)
 
-add_library(gameplay_dependencies INTERFACE)
-target_link_libraries(gameplay_dependencies INTERFACE
-    OpenGL::GL SDL2::SDL2
-    $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
-    $<IF:$<TARGET_EXISTS:SDL2_ttf::SDL2_ttf>,SDL2_ttf::SDL2_ttf,SDL2_ttf::SDL2_ttf-static>
-    SDL2::SDL2_gfx Boost::filesystem Boost::thread
-    OpenAL::OpenAL SQLite::SQLite3 ${CMAKE_DL_LIBS})
-# Object libraries also need the dependency headers while compiling.
-link_libraries(gameplay_dependencies)
-
 include_directories(${PROJECT_SOURCE_DIR}/src)
+
+add_library(gameplayfootball_dependencies INTERFACE)
+target_link_libraries(gameplayfootball_dependencies INTERFACE
+   Boost::thread Boost::filesystem
+   SDL2::SDL2
+   $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
+   $<IF:$<TARGET_EXISTS:SDL2_ttf::SDL2_ttf>,SDL2_ttf::SDL2_ttf,SDL2_ttf::SDL2_ttf-static>
+   OpenAL::OpenAL OpenGL::GL SQLite::SQLite3 ${CMAKE_DL_LIBS})
 
 # Include the sources
 include(sources.cmake)
@@ -85,7 +104,8 @@ set(OWN_LIBRARIES $<TARGET_OBJECTS:baselib> $<TARGET_OBJECTS:systemscommonlib>
         $<TARGET_OBJECTS:utilslib> $<TARGET_OBJECTS:gui2lib>)
 
 # Join all created static libraries into the single static one.
-add_library(blunted2 ${BLUNTED_CORE_SOURCES} ${BLUNTED_CORE_HEADERS} ${OWN_LIBRARIES})
+add_library(blunted2 ${BLUNTED_CORE_SOURCES} ${LIBS_SOURCES} ${BLUNTED_CORE_HEADERS}
+        ${ALL_LIBS_HEADERS} ${OWN_LIBRARIES})
 
 add_library(leaguelib ${LEAGUE_SOURCES} ${LEAGUE_HEADERS})
 add_library(gamelib ${GAME_SOURCES} ${GAME_HEADERS})
@@ -93,7 +113,31 @@ add_library(hidlib ${HID_SOURCES} ${HID_HEADERS})
 add_library(menulib ${MENU_SOURCES} ${MENU_HEADERS})
 add_library(datalib ${DATA_SOURCES} ${DATA_HEADERS})
 
+set(INTERNAL_TARGETS baselib systemscommonlib systemsgraphicslib systemsaudiolib
+   loaderslib typeslib frameworklib scenelib managerslib utilslib gui2lib
+   blunted2 leaguelib gamelib hidlib menulib datalib)
+foreach(target IN LISTS INTERNAL_TARGETS)
+   target_link_libraries(${target} PUBLIC gameplayfootball_dependencies)
+endforeach()
+
 set(LIBRARIES gamelib hidlib menulib datalib leaguelib blunted2)
 
-add_executable(gameplayfootball WIN32 ${CORE_SOURCES} ${CORE_HEADERS})
-target_link_libraries(gameplayfootball ${LIBRARIES})
+
+if(WIN32 AND GAMEPLAYFOOTBALL_WINDOWS_SUBSYSTEM)
+   add_executable(gameplayfootball WIN32 ${CORE_SOURCES} ${CORE_HEADERS})
+else()
+   add_executable(gameplayfootball ${CORE_SOURCES} ${CORE_HEADERS})
+endif()
+# SDL2main supplies the Windows entry point and must precede SDL2.
+if(WIN32)
+   target_link_libraries(gameplayfootball PRIVATE SDL2::SDL2main)
+endif()
+target_link_libraries(gameplayfootball PRIVATE ${LIBRARIES})
+target_link_libraries(gameplayfootball PRIVATE gameplayfootball_dependencies)
+
+# Keep runtime assets beside the executable so launching it from Explorer uses
+# the same layout as launching it from the build directory.
+add_custom_command(TARGET gameplayfootball POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E copy_directory
+      "${PROJECT_SOURCE_DIR}/data"
+      "$<TARGET_FILE_DIR:gameplayfootball>")

@@ -8,7 +8,9 @@
 // down in reverse order.
 
 #ifdef WIN32
+#define NOMINMAX
 #include <windows.h>
+#undef NOMINMAX
 #endif
 
 #include "main.hpp"
@@ -38,6 +40,8 @@
 #include "utils/orbitcamera.hpp"
 
 #include "SDL2/SDL_ttf.h"
+
+#include <sqlite3.h>
 
 #if defined(WIN32) && defined(__MINGW32__)
 #undef main
@@ -277,7 +281,7 @@ class ThreadHudThread : public Thread {
 };
 
 
-int main(int argc, const char** argv) {
+int main(int argc, char** argv) {
 
   // --- Config ------------------------------------------------------------------
   config = new Properties();
@@ -454,9 +458,9 @@ int main(int argc, const char** argv) {
 
   // --- Run --------------------------------------------------------------------
 #ifdef __APPLE__
-  // macOS requires OpenGL and Cocoa event pumping on the main thread.
-  // The scheduler (game logic) moves to a background thread; the main thread
-  // drives RunMainLoop() which blocks until the game exits.
+  // macOS creates the window and pumps Cocoa events on the main thread.
+  // The scheduler moves to a background thread; OpenGL rendering stays on
+  // the renderer thread while RunMainLoop() pumps events until the game exits.
   {
     boost::thread schedulerThread([]() { Run(); });
     graphicsSystem->RunMainLoop();
