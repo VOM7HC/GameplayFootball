@@ -195,6 +195,10 @@ Before merging platform changes:
 3. Inspect `log.txt` for the OpenGL adapter/version and rendering errors. Resolve
    or investigate the macOS texture warning before claiming visual validation.
 
+The presets set `CMAKE_POLICY_VERSION_MINIMUM=3.5` for CMake 4 compatibility
+with the pinned OpenAL package's older config file. When configuring without a
+preset on CMake 4, also pass `-DCMAKE_POLICY_VERSION_MINIMUM=3.5`.
+
 ## Troubleshooting
 
 - **CMake cannot find SDL2 or another package:** check `VCPKG_ROOT` and configure
