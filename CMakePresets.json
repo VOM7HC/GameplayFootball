@@ -1,0 +1,22 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "mac-vcpkg",
+      "displayName": "macOS Release (vcpkg)",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/mac-vcpkg",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "mac-vcpkg",
+      "configurePreset": "mac-vcpkg"
+    }
+  ]
+}

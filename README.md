@@ -1,135 +1,196 @@
-## Gameplay Football
-Football game, a fork of discontinued [GameplayFootball](https://github.com/BazkieBumpercar/GameplayFootball) written by [Bastiaan Konings Schuiling](http://www.properlydecent.com/).
+# Gameplay Football
 
-In 2019, Google Brain team picked up a game and created a Reinforcement Learning environment based on it - [Google Research Football](https://github.com/google-research/football). They made some improvements to the game, updated the libraries, but threw away everything (e.g. menus, audio effects, etc.) that was not necessary for their task.
+A C++ football game based on the discontinued
+[Gameplay Football](https://github.com/BazkieBumpercar/GameplayFootball) by
+[Bastiaan Konings Schuiling](http://www.properlydecent.com/).
 
-The goal of this repository is to update the existing code, based on Google Brain's changes (see `google_brain` branch) and other forks, and make it compiling and running on as many platforms as possible. PRs are always welcome.  
+This fork aims to modernize the original game while retaining its menus, audio,
+and match simulation. It also draws on changes from
+[Google Research Football](https://github.com/google-research/football), the
+reinforcement learning environment derived from the game in 2019. The
+`google_brain` branch contains related reference work.
 
-## Building from source
+## Build status
 
-### Linux
-Install required dependencies: 
+| Target | Verification |
+| --- | --- |
+| macOS Apple Silicon | Release build passed with vcpkg; startup initialized OpenGL 4.1 and audio. Full gameplay has not been verified. |
+| macOS Intel | Build commands provided below; not verified. |
+| Linux | Not verified with the current vcpkg configuration. |
+| Windows | Work in progress; not verified with the current vcpkg configuration. |
+
+The macOS startup check emitted a texture warning. A successful build and context
+initialization do not establish that every scene renders correctly.
+
+## Requirements
+
+- Git and CMake 3.21 or newer.
+- A C++ compiler and platform build tools.
+- [vcpkg](https://github.com/microsoft/vcpkg) to build third-party dependencies.
+
+The root `vcpkg.json` declares SDL2, SDL2_image (including JPEG support), SDL2_ttf,
+SDL2_gfx, Boost components, OpenAL Soft, and SQLite. Its baseline pins dependency
+versions. CMake installs these automatically when configured with the vcpkg
+toolchain; a separate `vcpkg install` command is unnecessary.
+
+OpenGL comes from the platform SDK or system development packages. On macOS,
+third-party libraries are linked statically and OpenGL uses the system framework.
+Homebrew dependency libraries are not required.
+
+## macOS
+
+### Set up the tools
+
+Install Apple's Command Line Tools if needed:
+
 ```bash
-sudo apt-get install git cmake build-essential libgl1-mesa-dev libsdl2-dev \
-libsdl2-image-dev libsdl2-ttf-dev libsdl2-gfx-dev libopenal-dev libboost-all-dev \
-libdirectfb-dev libst-dev mesa-utils xvfb x11vnc libsqlite3-dev
+xcode-select --install
 ```
 
-Run the following commands:
+Install CMake and make sure `cmake` is available in your shell. Then set up vcpkg
+once, choosing any location for its checkout:
+
 ```bash
-# Clone the repository
-git clone https://github.com/vi3itor/GameplayFootball.git
-cd GameplayFootball
-
-# Copy the contents of `data` directory into `build`
-cp -R data/. build
-
-# Go to `build` directory
-cd build
-# Generate Makefile
-cmake ..
-# Compile the game
-make -j$(nproc)
+git clone https://github.com/microsoft/vcpkg.git "$HOME/vcpkg"
+"$HOME/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+export VCPKG_ROOT="$HOME/vcpkg"
 ```
 
-Run the game:
+If vcpkg is already installed, set `VCPKG_ROOT` to that checkout instead. Set this
+variable again in each new terminal session, or add it to your shell profile.
+
+### Build for Apple Silicon
+
+Run from the GameplayFootball repository root:
+
 ```bash
+cmake --preset mac-vcpkg
+cmake --build --preset mac-vcpkg --parallel "$(sysctl -n hw.logicalcpu)"
+```
+
+The preset creates a Release build in `build/mac-vcpkg` using `arm64-osx`.
+The first configure takes longer because vcpkg downloads and builds dependencies.
+Later builds reuse installed dependencies and vcpkg's binary cache.
+
+### Run
+
+Copy the game data into the build directory, then run from that directory:
+
+```bash
+cp -R data/. build/mac-vcpkg/
+cd build/mac-vcpkg
 ./gameplayfootball
 ```
 
-### MacOS (Work in Progress)
-**Important**: Currently, the game can be compiled on Mac OS, but it is not running yet, because rendering must be done on the Main Thread.
+The working directory must contain `football.config`, `databases/`, and `media/`.
+CMake does not stage these assets automatically. Copy them again after changing
+files under `data/`; this also replaces the staged configuration file.
 
-To install required dependencies you need [`brew`](https://brew.sh/) which can be installed in Terminal by running:
+### Build for Intel
+
+Use a separate directory and override the preset's triplet:
+
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-```
-
-```bash
-# Install dependencies
-brew install git cmake sdl2 sdl2_image sdl2_ttf sdl2_gfx boost openal-soft
-# Navigate to the directory where you want to put the repository
-cd ~
-# Clone the repository
-git clone https://github.com/vi3itor/GameplayFootball.git
-cd GameplayFootball
-# Copy the contents of `data` directory into `build`
-cp -R data/. build
-
-# Go to `build` directory
-cd build
-# Generate Makefile
-cmake ..
-# Compile the game
-make -j$(nproc)
-
-# Run the game (Currently is not working)
+cmake --preset mac-vcpkg -B build/mac-vcpkg-intel -DVCPKG_TARGET_TRIPLET=x64-osx
+cmake --build build/mac-vcpkg-intel --parallel "$(sysctl -n hw.logicalcpu)"
+cp -R data/. build/mac-vcpkg-intel/
+cd build/mac-vcpkg-intel
 ./gameplayfootball
 ```
 
+Intel builds and execution have not been verified.
 
+### Compatibility notes
 
-### Windows (Work in Progress)
+- The macOS graphics loop runs on the main thread.
+- OpenAL Soft is pinned to `1.23.1#2`. Version 1.25.2 failed to compile with the
+  selected Apple Command Line Tools because their C++ library lacked
+  `std::views::join`.
+- The build still produces warnings from existing game code.
 
-Download and install:
-- [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/),
-- [Git](https://git-scm.com/download/win),
-- [CMake](https://cmake.org/download/) (make sure to add it to the system PATH).
+## Linux
 
-Install [`vcpkg`](https://github.com/microsoft/vcpkg) as explained in [Quick Start Guide](https://github.com/microsoft/vcpkg#quick-start-windows) or simply:
-create a directory, e.g. `C:\dev`, open Command Prompt and run the following commands: 
+The following is a starting point for Debian/Ubuntu; this path has not been
+verified with the current manifest. Install the compiler, CMake, Git, and system
+OpenGL development files:
+
+```bash
+sudo apt-get update
+sudo apt-get install build-essential cmake git curl zip unzip tar pkg-config libgl1-mesa-dev
+```
+
+Bootstrap vcpkg as in the macOS setup above, set `VCPKG_ROOT`, then run from the
+repository root:
+
+```bash
+cmake -S . -B build/linux-vcpkg \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+cmake --build build/linux-vcpkg --parallel "$(nproc)"
+cp -R data/. build/linux-vcpkg/
+cd build/linux-vcpkg
+./gameplayfootball
+```
+
+SDL's window and audio backends may require additional system development
+packages for your distribution and desktop environment.
+
+## Windows
+
+Windows support is a work in progress. These commands describe the manifest
+workflow; they have not been verified. Install Visual Studio with the **Desktop
+development with C++** workload, Git, and CMake. Use a Visual Studio Developer
+Command Prompt.
+
 ```bat
-% Navigate to the created directory
-cd C:\dev
-
-% Clone vckpg
-git clone https://github.com/microsoft/vcpkg
-
-% Run installation script
-.\vcpkg\bootstrap-vcpkg.bat
+git clone https://github.com/microsoft/vcpkg.git C:\dev\vcpkg
+call C:\dev\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+set VCPKG_ROOT=C:\dev\vcpkg
 ```
-Install required dependencies (all triplets **must be `x86-windows`**):
-```bat 
-.\vcpkg.exe install --triplet x86-windows boost:x86-windows sdl2 sdl2-image[libjpeg-turbo] sdl2-ttf sdl2-gfx opengl openal-soft
-```
+
+From the GameplayFootball repository root, configure the original 32-bit target:
 
 ```bat
-% Navigate to the directory where you want to put the repository
-cd C:\dev
-
-% Clone repository
-git clone https://github.com/vi3itor/GameplayFootball.git 
-cd GameplayFootball
-
-% Switch to windows branch
-git switch windows
-
-
-% Copy the contents of `data` directory into `build\Debug` or (and) `build\Release`
-xcopy /e /i data build\Debug
-xcopy /e /i data build\Release
-```
-Go to `build` directory and generate `cmake` files. Make sure that you correctly set the directory for `vcpkg` (in our case it is installed into `C:\dev\vcpkg`):
-```bat
-cd build
-
-cmake .. -DCMAKE_GENERATOR_PLATFORM=Win32 -DCMAKE_TOOLCHAIN_FILE=C:/dev/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE  
-```
-To build `Release` version:
-```bat
-cmake --build . --parallel --config Release
-```
-For `Debug` version:
-```bat
-cmake --build . --parallel --config Debug
+cmake -S . -B build/windows-vcpkg -A Win32 -DVCPKG_TARGET_TRIPLET=x86-windows -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake"
+cmake --build build/windows-vcpkg --config Release --parallel
+xcopy /E /I /Y data build\windows-vcpkg\Release
+cd build\windows-vcpkg\Release
+gameplayfootball.exe
 ```
 
-That's it! Run `gameplayfootball.exe` inside `build\Release` directory (or inside `build\Debug` for `Debug` version)
+## Troubleshooting
 
+- **CMake cannot find SDL2 or another package:** check `VCPKG_ROOT` and configure
+  with the preset or explicit vcpkg toolchain shown above.
+- **Changing toolchain or architecture:** use a fresh build directory. An existing
+  CMake cache can retain paths and architecture settings from an earlier build.
+- **Missing configuration, database, or media:** stage `data/` and run with the
+  build directory as the working directory.
+- **Dependency build failure:** inspect the log path printed by vcpkg. Include the
+  failing package, compiler version, target triplet, and relevant errors in an issue.
+- **Rendering or startup issue:** include `log.txt` from the run directory and
+  terminal output, along with the OS and GPU details.
 
-## Problems? 
-If you have any problems please open an issue. 
+There is no automated test suite. Validate changes by building and running the
+game, and distinguish startup checks from full gameplay testing.
 
+## Source layout
 
-### Donate
-If you want to thank Bastiaan for his great work, consider a donation to his Bitcoin address 1JHnTe2QQj8RL281fXFiyvK9igj2VhPh2t
+| Path | Purpose |
+| --- | --- |
+| `src/main.cpp` | Application entry point and task setup |
+| `src/base/`, `src/framework/`, `src/scene/`, `src/systems/` | Blunted2 engine and platform systems |
+| `src/onthepitch/` | Match simulation, players, teams, and AI |
+| `src/menu/`, `src/hid/` | Menus and input handling |
+| `data/` | Configuration, databases, shaders, and other game assets |
+| `CMakeLists.txt`, `sources.cmake` | Build targets and source lists |
+| `vcpkg.json`, `CMakePresets.json` | Dependency versions and macOS build preset |
+
+## Contributing
+
+Issues and pull requests are welcome. Include reproducible steps and state which
+platforms you built and tested. See [LICENSE](LICENSE) for licensing information.
+
+## Support the original author
+
+Bastiaan's Bitcoin donation address: `1JHnTe2QQj8RL281fXFiyvK9igj2VhPh2t`.

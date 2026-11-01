@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.16)
 
 set(PACKAGE GameplayFootball)
 
@@ -26,30 +26,26 @@ endif(UNIX)
 # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -fPIC -g -O3")
 # SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fPIC -O3 -g")
 
-# Find required libraries
-FIND_PACKAGE(OpenGL REQUIRED)
-include_directories(${OPENGL_INCLUDE_DIR})
+# Use package targets so static dependency libraries and system frameworks
+# are carried through to the executable by vcpkg.
+find_package(OpenGL REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2_image CONFIG REQUIRED)
+find_package(SDL2_ttf CONFIG REQUIRED)
+find_package(sdl2-gfx CONFIG REQUIRED)
+find_package(Boost CONFIG REQUIRED COMPONENTS thread filesystem)
+find_package(OpenAL CONFIG REQUIRED)
+find_package(SQLite3 REQUIRED)
 
-FIND_PACKAGE(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIR})
-
-FIND_PACKAGE(SDL2_image REQUIRED)
-include_directories(${SDL2_IMAGE_DIRS})
-
-FIND_PACKAGE(SDL2_ttf REQUIRED)
-include_directories(${SDL2_TTF_DIRS})
-
-FIND_PACKAGE(SDL2_gfx REQUIRED)
-include_directories(${SDL2_GFX_DIRS})
-
-FIND_PACKAGE(Boost REQUIRED COMPONENTS thread filesystem)
-include_directories(${Boost_INCLUDE_DIR})
-
-FIND_PACKAGE(OpenAL REQUIRED)
-include_directories(${OPENAL_INCLUDE_DIR})
-
-FIND_PACKAGE(SQLite3 REQUIRED)
-include_directories(${SQLite3_INCLUDE_DIRS})
+add_library(gameplay_dependencies INTERFACE)
+target_link_libraries(gameplay_dependencies INTERFACE
+    OpenGL::GL SDL2::SDL2
+    $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
+    $<IF:$<TARGET_EXISTS:SDL2_ttf::SDL2_ttf>,SDL2_ttf::SDL2_ttf,SDL2_ttf::SDL2_ttf-static>
+    SDL2::SDL2_gfx Boost::filesystem Boost::thread
+    OpenAL::OpenAL SQLite::SQLite3 ${CMAKE_DL_LIBS})
+# Object libraries also need the dependency headers while compiling.
+link_libraries(gameplay_dependencies)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
@@ -97,17 +93,7 @@ add_library(hidlib ${HID_SOURCES} ${HID_HEADERS})
 add_library(menulib ${MENU_SOURCES} ${MENU_HEADERS})
 add_library(datalib ${DATA_SOURCES} ${DATA_HEADERS})
 
-set(LIBRARIES gamelib hidlib menulib datalib leaguelib blunted2
-   Boost::filesystem Boost::thread SQLite::SQLite3
-   ${SDL2_IMAGE_LIBRARIES} ${SDL2_TTF_LIBRARIES} ${SDL2_GFX_LIBRARIES}
-   ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} dl m ${OPENGL_LIBRARIES})
+set(LIBRARIES gamelib hidlib menulib datalib leaguelib blunted2)
 
 add_executable(gameplayfootball WIN32 ${CORE_SOURCES} ${CORE_HEADERS})
 target_link_libraries(gameplayfootball ${LIBRARIES})
-
-if(APPLE)
-  set_target_properties(gameplayfootball PROPERTIES
-    BUILD_RPATH "/Library/Frameworks;/opt/homebrew/lib"
-    INSTALL_RPATH "/Library/Frameworks;/opt/homebrew/lib"
-  )
-endif()
