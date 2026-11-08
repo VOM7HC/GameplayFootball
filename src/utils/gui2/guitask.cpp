@@ -194,6 +194,18 @@ namespace blunted {
         if (windowManager->GetFocus() == currentFocus) windowManager->GetFocus()->ProcessEvent(event);
         delete event;
       }
+
+      const Uint8 dpad = UserEventManager::GetInstance().GetJoystickDPad(j);
+      const Uint8 pressed = dpad & ~prevDPadState[j];
+      prevDPadState[j] = dpad;
+      if (j == GetActiveJoystickID() && pressed) {
+        const int x = bool(pressed & SDL_HAT_RIGHT) - bool(pressed & SDL_HAT_LEFT);
+        const int y = bool(pressed & SDL_HAT_DOWN) - bool(pressed & SDL_HAT_UP);
+        if (x || y) {
+          wEvent->SetDirection(Vector3(x, y, 0));
+          needsWindowingEvent = true;
+        }
+      }
     }
 
     if (needsWindowingEvent)

@@ -60,6 +60,7 @@ namespace blunted {
 
       std::map<SDL_Keycode, TimedKeyPress> prevKeyState;
       bool prevButtonState[_JOYSTICK_MAX][_JOYSTICK_MAXBUTTONS];
+      Uint8 prevDPadState[_JOYSTICK_MAX] = {};
       bool prevAxisState[_JOYSTICK_MAX][_JOYSTICK_MAXAXES];
 
       int joyButtonActivate = 0;
