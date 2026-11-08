@@ -58,9 +58,10 @@ namespace blunted {
       bool GetMouseButtonState(int sdlButtonID) const;
       Vector3 GetMouseRelativePos() const;
 
-      int GetJoystickCount() { return SDL_NumJoysticks(); }
+      int GetJoystickCount();
       bool GetJoyButtonState(int joyID, int sdlJoyButtonID) const;
       void SetJoyButtonState(int joyID, int sdlJoyButtonID, bool newState);
+      Uint8 GetJoystickDPad(int joyID) const;
 
       float GetJoystickAxis(int joyID, int axisID, bool deadzone = true) const;
       float GetJoystickAxisRaw(int joyID, int axisID) const;
@@ -78,7 +79,8 @@ namespace blunted {
 
       bool mousePressed[8];
 
-      SDL_Joystick *joystick[_JOYSTICK_MAX];
+      SDL_Joystick *joystick[_JOYSTICK_MAX] = {};
+      SDL_GameController *gameController[_JOYSTICK_MAX] = {};
       bool joyButtonPressed[_JOYSTICK_MAX][_JOYSTICK_MAXBUTTONS];
       float joyAxis[_JOYSTICK_MAX][_JOYSTICK_MAXAXES];
       float joyAxisCalibration[_JOYSTICK_MAX][_JOYSTICK_MAXAXES][3]; // min, max, rest

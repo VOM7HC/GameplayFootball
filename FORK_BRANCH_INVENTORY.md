@@ -44,8 +44,8 @@ Sorted by newest branch-tip committer timestamp. Repository numbers follow this 
 | [R024](#r024) | [jingle-helper/GameplayFootball](https://github.com/jingle-helper/GameplayFootball) | `master` | 2 | 2026-05-08 21:12:34 | 2026-05-08 21:12:35 |
 | [R025](#r025) | [mparodi/GameplayFootball](https://github.com/mparodi/GameplayFootball) | `master` | 2 | 2026-03-15 21:00:59 | 2026-03-15 21:00:59 |
 | [R026](#r026) | [5ylver/GameplayFootball](https://github.com/5ylver/GameplayFootball) | `master` | 1 | 2026-03-09 09:04:47 | 2026-03-09 09:04:52 |
-| [R027](#r027) | [Simerca/GameplayFootball](https://github.com/Simerca/GameplayFootball) | `master` | 5 | 2025-09-22 05:26:57 | 2025-09-22 05:27:41 |
-| [R028](#r028) | [Joe1992w/GameplayFootball](https://github.com/Joe1992w/GameplayFootball) | `master` | 5 | 2025-08-08 00:22:18 | 2025-08-08 00:22:22 |
+| [R027](#r027) Selective port | [Simerca/GameplayFootball](https://github.com/Simerca/GameplayFootball) | `master` | 5 | 2025-09-22 05:26:57 | 2025-09-22 05:27:41 |
+| [R028](#r028) ❌ Do not merge | [Joe1992w/GameplayFootball](https://github.com/Joe1992w/GameplayFootball) | `master` | 5 | 2025-08-08 00:22:18 | 2025-08-08 00:22:22 |
 | [R029](#r029) Selective port | [jotalamp/GameplayFootball](https://github.com/jotalamp/GameplayFootball) | `master` | 1 | 2025-01-04 00:15:25 | 2025-01-04 00:15:38 |
 | [R030](#r030) ❌ Do not merge | [sturdy-robot/GameplayFootball](https://github.com/sturdy-robot/GameplayFootball) | `main` | 2 | 2024-11-06 00:50:28 | 2024-12-27 10:01:48 |
 | [R031](#r031) ❌ Do not merge | [CasonCaly/GameplayFootball](https://github.com/CasonCaly/GameplayFootball) | `master` | 1 | 2023-12-26 17:18:20 | 2023-12-26 17:18:25 |
@@ -490,7 +490,9 @@ Sorted by newest branch-tip committer timestamp. Repository numbers follow this 
 
 <a id="r027"></a>
 
-### R027 — Simerca/GameplayFootball
+### R027 — Simerca/GameplayFootball — Selective port
+
+`master` and `commentary` share the same four Simerca commits. Adapted [Simerca’s D-pad menu navigation](https://github.com/Simerca/GameplayFootball/commit/4049ad94cb53f4daaefeec76f7ac134a1bec2334) using SDL’s mapped directions for the active controller. Kept the current gameplay mappings and calibration. Skipped the overlapping macOS changes, shell-based commentary, and asset edits.
 
 [Repository](https://github.com/Simerca/GameplayFootball) · Default: `master` · Archived: false · Repository pushed: 2025-09-22 05:27:41
 
@@ -504,7 +506,9 @@ Sorted by newest branch-tip committer timestamp. Repository numbers follow this 
 
 <a id="r028"></a>
 
-### R028 — Joe1992w/GameplayFootball
+### R028 — Joe1992w/GameplayFootball — ❌ Do not merge
+
+The only `engine` commit, `230670cc`, changes build and local tool settings. Main already ignores `out/` and uses newer CMake package targets. The fork switches SDL linking to variables and adds local Claude settings. The `google-brain` branch carries separate upstream work by Victor Khaustov.
 
 [Repository](https://github.com/Joe1992w/GameplayFootball) · Default: `master` · Archived: false · Repository pushed: 2025-08-08 00:22:22
 

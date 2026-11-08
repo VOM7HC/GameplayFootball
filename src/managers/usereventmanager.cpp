@@ -51,9 +51,10 @@ namespace blunted {
 
     // init the joy!
 
-    SDL_Init(SDL_INIT_JOYSTICK);
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+    SDL_Init(SDL_INIT_GAMECONTROLLER);
+    for (int i = 0; i < GetJoystickCount(); i++) {
       joystick[i] = SDL_JoystickOpen(i);
+      if (SDL_IsGameController(i)) gameController[i] = SDL_GameControllerOpen(i);
     }
     //SDL_JoystickEventState(SDL_IGNORE); // doesn't seem to work? bug?
     SDL_JoystickEventState(SDL_ENABLE);
@@ -61,8 +62,9 @@ namespace blunted {
   }
 
   UserEventManager::~UserEventManager() {
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
-      SDL_JoystickClose(joystick[i]);
+    for (int i = 0; i < _JOYSTICK_MAX; i++) {
+      if (gameController[i]) SDL_GameControllerClose(gameController[i]);
+      if (joystick[i]) SDL_JoystickClose(joystick[i]);
     }
   }
 
@@ -157,6 +159,23 @@ namespace blunted {
     return mousePos;
   }
 
+
+  int UserEventManager::GetJoystickCount() {
+    const int count = SDL_NumJoysticks();
+    return count < _JOYSTICK_MAX ? count : _JOYSTICK_MAX;
+  }
+
+  Uint8 UserEventManager::GetJoystickDPad(int joyID) const {
+    SDL_GameController *controller = gameController[joyID];
+    if (!controller) return SDL_HAT_CENTERED;
+
+    Uint8 directions = SDL_HAT_CENTERED;
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP)) directions |= SDL_HAT_UP;
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN)) directions |= SDL_HAT_DOWN;
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT)) directions |= SDL_HAT_LEFT;
+    if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT)) directions |= SDL_HAT_RIGHT;
+    return directions;
+  }
 
   bool UserEventManager::GetJoyButtonState(int joyID, int sdlJoyButtonID) const {
     boost::mutex::scoped_lock lock(joyButtonPressedMutex);
