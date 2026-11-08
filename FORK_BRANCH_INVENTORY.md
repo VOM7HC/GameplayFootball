@@ -507,7 +507,10 @@ Sorted by newest branch-tip committer timestamp. Each numbered entry has its bra
 
 <a id="r029"></a>
 
-### R029 — gattilorenz/GameplayFootball
+### R029 — gattilorenz/GameplayFootball — Typed JSON port
+
+Ported Lorenzo Gatti's [typed JSON export](https://github.com/gattilorenz/GameplayFootball/commit/fc5c6bf6794bd6150bd487c827d5a518d56e169b). PASS reports now use JSON numbers and booleans for scores, event codes, and flags.
+The match-length change is a separate gameplay choice (`6af313a`). The metadata commits add hard-coded officials or depend on a changed database (`d2ab801`, `ad346166`, `2a9946b`).
 
 [Repository](https://github.com/gattilorenz/GameplayFootball) · Default: `master` · Archived: false · Repository pushed: 2023-02-11 00:14:21
 
@@ -549,7 +552,7 @@ Reporting is off by default. Add this to the game's `football.config`:
 
 Leaving a match writes `match-reports/match-<start-ms>-<unique-id>/report.json`; paths are relative to the game's working directory unless absolute. Remove the setting to disable reporting. Write failures produce a warning without stopping cleanup; slow storage may delay exit.
 
-- Arrays: `MatchActions`, `MatchInfo`, and `MatchLineup`. PASS labels/codes, string-valued scalars, and `/Date(milliseconds)/` epoch dates are retained; empty arrays stay `[]`.
+- Reports contain `MatchActions`, `MatchInfo`, and `MatchLineup`. Scores, event codes, and flags use JSON numbers and booleans. Action minutes remain strings. Dates use `/Date(milliseconds)/`, and empty arrays use `[]`.
 - Events record goals, set pieces, offsides, fouls, and cards, with score/time snapshots. `n_HomeOrAway` is the actor's team; `n_BeneficiaryHomeOrAway` identifies the awarded team (0 home, 1 away, -1 unspecified).
 - Lineups retain the roster and starting formation roles. `b_Starter` distinguishes bench players; unknown roles use code 0. Names remain UTF-8, with invalid source bytes replaced in the report only.
 - Match status is `completed` or `abandoned`. `b_HalfTimeKnown` distinguishes a captured halftime score from an unknown one. Start time includes loading; legacy `Local` date fields contain the same epoch instant.
